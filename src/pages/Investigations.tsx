@@ -73,9 +73,36 @@ interface CaseCheck {
   evidence: { photos: Record<string, number>; locations: number };
 }
 
-function AnswerValue({ field, value }: { field: Field; value: unknown }) {
+/** Blanks in a statement, as the server finds them (Shared/templates/definition.ts). */
+const BLANK =
+  /\.{3,}|…+|_{3,}|ـ{3,}|-{4,}|\(\s*\)|(?<=(?:السيد|السيدة|الأستاذ|الاستاذ|الأستاذة|المهندس|الدكتور|السادة)\/)\s*(?=\/|\)|$)|[:：]\s*$/g;
+
+/** The statement as it prints: rewritten by the investigator, else with their words in its blanks. */
+function statementAsWritten(field: Field, answers: Record<string, unknown>): string {
+  const rewritten = answers[`${field.key}__text`];
+  if (typeof rewritten === "string" && rewritten.trim()) return rewritten.trim();
+  const typed = answers[`${field.key}__blanks`];
+  const values = Array.isArray(typed) ? typed.map((item) => String(item ?? "").trim()) : [];
+  let index = 0;
+  return (field.statement ?? field.label).replace(BLANK, (blank) => {
+    const value = values[index++];
+    if (!value) return blank;
+    if (blank.startsWith("(")) return `(${value})`;
+    if (/^[:：]/.test(blank)) return `: ${value}`;
+    if (!blank.trim() && blank.length < 3) return `${value} `;
+    return value;
+  });
+}
+
+function AnswerValue({ field, value, answers }: { field: Field; value: unknown; answers: Record<string, unknown> }) {
   if (field.type === "attestation") {
-    return <span className="answer-statement">✓ {field.statement ?? field.label}</span>;
+    const rewritten = typeof answers[`${field.key}__text`] === "string" && String(answers[`${field.key}__text`]).trim();
+    return (
+      <span className="answer-statement">
+        ✓ {statementAsWritten(field, answers)}
+        {rewritten ? <small className="hint"> (كتبها المستعلم بكلماته)</small> : null}
+      </span>
+    );
   }
   if (field.type === "table" && Array.isArray(value)) {
     const columns = field.columns ?? [];
@@ -398,7 +425,7 @@ function CaseDrawer({
                           <div key={field.key}>
                             <dt>{field.label}</dt>
                             <dd>
-                              <AnswerValue field={field} value={item.answers[field.key]} />
+                              <AnswerValue field={field} value={item.answers[field.key]} answers={item.answers} />
                             </dd>
                           </div>
                         ),
