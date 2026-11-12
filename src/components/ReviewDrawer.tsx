@@ -25,7 +25,29 @@ interface RequestDetail {
   } | null;
   national_id_images: { front: boolean; back: boolean };
   profile_image: boolean;
+  /** The area the investigator said they cover, chosen at signup; null when not chosen yet. */
+  work_area?: WorkArea | null;
 }
+
+interface WorkArea {
+  governorate: string | null;
+  district: string | null;
+  local_unit: string | null;
+  main_village: string | null;
+  sub_village: string | null;
+  street: string | null;
+  lat: number | string | null;
+  lng: number | string | null;
+}
+
+const AREA_LEVELS: [keyof WorkArea, string][] = [
+  ["governorate", "المحافظة"],
+  ["district", "المركز / الحي"],
+  ["local_unit", "الوحدة المحلية"],
+  ["main_village", "القرية الأم"],
+  ["sub_village", "القرية التابعة / العزبة"],
+  ["street", "الشارع / العلامة المميزة"],
+];
 
 /** HR imports keep local numbers; accounts store the international form. */
 const samePhone = (a: string, b: string) =>
@@ -228,6 +250,36 @@ export function ReviewDrawer({
                 {!record && (
                   <p className="hint">
                     لا يوجد سجل وظيفي لهذا المتقدم. سيُنشأ له رقم موظف جديد عند التفعيل.
+                  </p>
+                )}
+              </section>
+
+              <section>
+                <h3>منطقة العمل التي يغطيها</h3>
+                {detail.work_area ? (
+                  <>
+                    <dl className="review-facts">
+                      {AREA_LEVELS.filter(([key]) => detail.work_area?.[key]).map(([key, label]) => (
+                        <Fact key={key} label={label} value={String(detail.work_area?.[key])} />
+                      ))}
+                    </dl>
+                    {detail.work_area.lat != null && detail.work_area.lng != null && (
+                      <p className="hint">
+                        <a
+                          href={`https://www.openstreetmap.org/?mlat=${detail.work_area.lat}&mlon=${detail.work_area.lng}#map=15/${detail.work_area.lat}/${detail.work_area.lng}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          dir="ltr"
+                        >
+                          {Number(detail.work_area.lat).toFixed(5)}, {Number(detail.work_area.lng).toFixed(5)}
+                        </a>{" "}
+                        — عرض الموقع على الخريطة
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="hint">
+                    لم يحدد المتقدم منطقة عمله (سجّل من نسخة أقدم من التطبيق). سيُطلب منه تحديدها عند أول دخول.
                   </p>
                 )}
               </section>
