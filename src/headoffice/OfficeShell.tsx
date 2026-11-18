@@ -48,6 +48,7 @@ export function OfficeShell() {
 
   const links: NavItem[] = [
     { to: "/", label: "نظرة عامة", icon: "home" },
+    { to: "/requests", label: "طلبات الانضمام", icon: "check" },
     { to: "/staff", label: "الموظفون", icon: "users" },
     { to: "/attendance", label: "الحضور", icon: "history" },
     { to: "/payroll", label: "الرواتب", icon: "badge" },

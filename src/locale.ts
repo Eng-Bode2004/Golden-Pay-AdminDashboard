@@ -2,6 +2,20 @@ import { initAppearance } from "./themes";
 
 const english: Record<string, string> = {
   // Head Office templates and versioned client forms
+  "تعذّر تحميل قائمة البنوك والشركات.": "Couldn't load the banks and companies.",
+  "إلغاء الكل": "Clear all",
+  "اختيار الكل": "Select all",
+  "جهة": "client",
+  "جهات": "clients",
+  "لم تُختر جهة: يصله استعلامات كل البنوك والشركات.": "No client chosen: they get investigations from every bank and company.",
+  "تعذّر حفظ الجهات.": "Couldn't save the clients.",
+  "البنوك والشركات التي يعمل لها": "Banks and companies they work for",
+  "غير متاح الآن": "Unavailable now",
+  "حفظ الجهات": "Save clients",
+  "حُفظت. تصله الاستعلامات الجديدة حسب اختيارك.": "Saved. New investigations follow your choice.",
+  "البنوك والشركات التي سيعمل لها": "Banks and companies they will work for",
+  "اختر الجهات التي تصله استعلاماتها. يمكن تعديلها لاحقًا من ملفه.": "Choose the clients whose investigations they receive. You can change this later from their profile.",
+  "طلبات الانضمام": "Join requests",
   "اسحب نقطة إلى مكانها في الصفحة ثم اربطها بحقل. لتحويل جملة من نموذج العميل إلى عبارة إقرار: حدّدها بالفأرة ثم اضغط «عبارة إقرار». ويمكنك سحب أي نقطة نص أو عبارة إقرار أو مربع اختيار لتغيير مكانها.": "Drag a point onto the page, then link it to a field. To turn a sentence of the client's form into a statement, select it with the mouse, then press «Statement». You can also drag any text, statement or checkbox point to move it.",
   "حدّد الجملة في الصفحة بالفأرة ثم اضغط «عبارة إقرار» لتصبح عبارة إقرار، أو اسحب «عبارة إقرار» إلى مكان فارغ لإضافة عبارة جديدة.": "Select the sentence on the page with the mouse, then press «Statement» to turn it into a statement, or drag «Statement» to an empty spot to add a new one.",
   "حدّد جملة داخل فقرة واحدة فقط، ثم اضغط «عبارة إقرار».": "Select a sentence within a single paragraph, then press «Statement».",

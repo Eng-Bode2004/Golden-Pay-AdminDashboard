@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "../auth";
 import { Ambient, Brand, Emblem, Icon } from "../components/ui";
 import { LoginPage } from "../pages/Login";
+import { RequestsPage } from "../pages/Requests";
 import { AppUpdatesPage } from "./AppUpdates";
 import { AttendancePage } from "./Attendance";
 import { ComplaintsPage } from "./Complaints";
@@ -70,6 +71,7 @@ export function OfficeApp() {
     <Routes>
       <Route path="/" element={<OfficeShell />}>
         <Route index element={<OfficeOverviewPage />} />
+        <Route path="requests" element={<RequestsPage />} />
         <Route path="staff" element={<StaffPage />} />
         <Route path="staff/:id" element={<StaffProfilePage />} />
         <Route path="attendance" element={<AttendancePage />} />

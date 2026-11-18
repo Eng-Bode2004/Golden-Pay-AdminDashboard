@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { api, apiBlob, ApiRequestError } from "../api";
+import { ClientsPicker, useInvestigatorClients } from "./ClientsPicker";
 import { Avatar, date, ErrorMessage, Icon, Status } from "./ui";
 
 interface RequestDetail {
@@ -131,6 +132,9 @@ export function ReviewDrawer({
   const [reason, setReason] = useState("");
   const [zoomed, setZoomed] = useState<string | null>(null);
   const panel = useRef<HTMLElement>(null);
+  // The companies and banks the new investigator will work for (none = all).
+  const clients = useInvestigatorClients(userId);
+  const [clientIds, setClientIds] = useState<string[] | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -170,7 +174,7 @@ export function ReviewDrawer({
     try {
       await api(`/admin/users/${userId}/${type}`, {
         method: "POST",
-        body: JSON.stringify(type === "reject" ? { reason: reason.trim() } : {}),
+        body: JSON.stringify(type === "reject" ? { reason: reason.trim() } : { client_ids: clientIds ?? clients.data?.client_ids ?? [] }),
       });
       window.dispatchEvent(new Event("gp-requests-changed"));
       onDecided(
@@ -312,6 +316,22 @@ export function ReviewDrawer({
                   </p>
                 )}
               </section>
+
+              {pending && (
+                <section>
+                  <h3>البنوك والشركات التي سيعمل لها</h3>
+                  <p className="hint">اختر الجهات التي تصله استعلاماتها. يمكن تعديلها لاحقًا من ملفه.</p>
+                  <ErrorMessage message={clients.error} />
+                  {clients.data && (
+                    <ClientsPicker
+                      clients={clients.data.clients}
+                      value={clientIds ?? clients.data.client_ids}
+                      onChange={setClientIds}
+                      disabled={busy}
+                    />
+                  )}
+                </section>
+              )}
             </>
           )}
           {!detail && !error && <span className="image-skeleton drawer-skeleton" />}
