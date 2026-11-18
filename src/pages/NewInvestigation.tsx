@@ -9,7 +9,6 @@ import {
   type AreaNames,
   type Candidate,
 } from "../components/AreaPicker";
-import { money } from "../components/Finance";
 import { Avatar, date, ErrorMessage, Icon } from "../components/ui";
 import type { ServiceLevel } from "../headoffice/Pricing";
 
@@ -29,16 +28,8 @@ interface Template {
   layout_mode: "docx" | "standard";
 }
 
-const STEPS = ["المُكلَّف", "المستعلم عنه", "الجهة والنموذج", "نوع الاستعلام والسعر", "المراجعة والإرسال"];
+const STEPS = ["المُكلَّف", "المستعلم عنه", "الجهة والنموذج", "نوع الاستعلام", "المراجعة والإرسال"];
 
-const PRICE_BASIS: Record<string, string> = {
-  client_district: "سعر الجهة لهذا المركز",
-  client_governorate: "سعر الجهة لهذه المحافظة",
-  client: "سعر الجهة",
-  district: "سعر المركز",
-  governorate: "سعر المحافظة",
-  default: "السعر العام لنوع الاستعلام",
-};
 
 export default function NewInvestigationPage() {
   const navigate = useNavigate();
@@ -65,8 +56,6 @@ export default function NewInvestigationPage() {
   const [levels, setLevels] = useState<ServiceLevel[]>([]);
   const [level, setLevel] = useState<ServiceLevel | null>(null);
   const [scheduledAt, setScheduledAt] = useState("");
-  // Prices come from head office's price list for this client, area and type (read-only here).
-  const [prices, setPrices] = useState({ client_price: 0, investigator_price: 0, basis: "default" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -92,17 +81,7 @@ export default function NewInvestigationPage() {
       .then((data) => setTemplates(data.templates))
       .catch(() => setError("تعذّر تحميل النماذج."));
   }, [client]);
-  useEffect(() => {
-    if (!level) return;
-    const params = new URLSearchParams({ service_level: level.code });
-    const clientId = client?.client_id;
-    if (clientId) params.set("client_id", clientId);
-    if (place.governorate) params.set("governorate", place.governorate);
-    if (place.district) params.set("district", place.district);
-    api<{ quote: { client_price: number; investigator_price: number; basis: string } }>(`/investigations/price-quote?${params}`)
-      .then((data) => setPrices(data.quote))
-      .catch(() => setPrices({ client_price: level.client_price, investigator_price: level.investigator_price, basis: "default" }));
-  }, [level, client, place.governorate, place.district]);
+  // Prices are set by head office and are not shown to whoever sends the investigation.
   // An area chosen by name is almost always the subject's area too.
   useEffect(() => {
     if (filter?.mode === "hierarchy") {
@@ -390,22 +369,6 @@ export default function NewInvestigationPage() {
                 />
               </label>
             )}
-            {level && (
-              <div className="price-quote">
-                <div>
-                  <span>سعر العميل</span>
-                  <b>{prices.client_price ? money(prices.client_price) : "حسب الاتفاق"}</b>
-                </div>
-                <div>
-                  <span>أجر المستعلم</span>
-                  <b>{money(prices.investigator_price)}</b>
-                </div>
-                <small>
-                  <Icon name="tag" size={13} />
-                  {PRICE_BASIS[prices.basis] ?? PRICE_BASIS.default} · تحددها الإدارة العليا من قائمة الأسعار
-                </small>
-              </div>
-            )}
           </>
         )}
 
@@ -445,18 +408,6 @@ export default function NewInvestigationPage() {
             <div>
               <dt>الموعد النهائي</dt>
               <dd>{dueAt ? date(dueAt) : "—"}</dd>
-            </div>
-            <div>
-              <dt>سعر العميل</dt>
-              <dd>{money(prices.client_price)}</dd>
-            </div>
-            <div>
-              <dt>أجر المستعلم</dt>
-              <dd>{money(prices.investigator_price)}</dd>
-            </div>
-            <div>
-              <dt>ربح الشركة</dt>
-              <dd>{money(prices.client_price - prices.investigator_price)}</dd>
             </div>
           </dl>
         )}

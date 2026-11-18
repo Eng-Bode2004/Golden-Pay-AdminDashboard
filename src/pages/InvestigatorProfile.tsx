@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { api } from "../api";
 import { money, MonthPicker, monthLabel, thisMonth, TrendBars } from "../components/Finance";
 import { between, minutesLabel, OFFER_RESPONSE, Stamp } from "../components/Timing";
+import { DevicePanel } from "../components/DevicePanel";
 import { areaLabel, type ServiceArea, ReviewDrawer, SecureImage } from "../components/ReviewDrawer";
 import { Avatar, date, ErrorMessage, Icon, number, Status } from "../components/ui";
 
@@ -293,6 +294,10 @@ export default function InvestigatorProfilePage() {
             {area?.lat && area.lng ? <AreaMap lat={area.lat} lng={area.lng} /> : <p className="hint">لم يحدد موقعه على الخريطة.</p>}
           </div>
         </section>
+      </div>
+
+      <div className="finance-grid single">
+        <DevicePanel userId={id} />
       </div>
 
       <div className="finance-grid">

@@ -68,6 +68,96 @@ function ScheduleCard({ title, value, onChange }: { title: string; value: Schedu
   );
 }
 
+/** How long an investigator has, after accepting, before the case goes to someone else. */
+function WorkTimeCard() {
+  const [minutes, setMinutes] = useState<number | null | undefined>(undefined);
+  const [hours, setHours] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    api<{ work_minutes: number | null }>("/investigations/dispatch/work-time")
+      .then((data) => {
+        setMinutes(data.work_minutes);
+        setHours(data.work_minutes ? String(Math.round((data.work_minutes / 60) * 100) / 100) : "");
+      })
+      .catch(() => setError("تعذّر تحميل مهلة الإنجاز."));
+  }, []);
+
+  const save = async (value: number | null) => {
+    setBusy(true);
+    setError("");
+    setSaved(false);
+    try {
+      const data = await api<{ work_minutes: number | null }>("/investigations/dispatch/work-time", {
+        method: "PATCH",
+        body: JSON.stringify({ work_minutes: value }),
+      });
+      setMinutes(data.work_minutes);
+      if (!data.work_minutes) setHours("");
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "تعذّر حفظ المهلة.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const wanted = hours.trim() ? Math.round(Number(hours) * 60) : null;
+
+  return (
+    <section className="glass panel rules-card">
+      <div className="panel-heading">
+        <h2>مهلة إنجاز الاستعلام</h2>
+        <Icon name="clock" size={18} />
+      </div>
+      <p className="hint">
+        بعد أن يقبل المستعلم الاستعلام (أو من موعد الزيارة في الاستعلامات المجدولة)، إذا لم يرسل التقرير خلال هذه المدة
+        يُسحب منه ويُرسل لمستعلم آخر في نفس المنطقة.
+      </p>
+      <ErrorMessage message={error} />
+      {saved && <p className="success-message">{minutes ? "حُفظت المهلة وتُطبَّق من الآن." : "أُلغيت المهلة: لا يُسحب أي استعلام."}</p>}
+      {minutes !== undefined && (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            void save(wanted);
+          }}
+        >
+          <div className="form-row">
+            <label className="field">
+              <span>المهلة بالساعات</span>
+              <input
+                type="number"
+                min={0.25}
+                max={336}
+                step={0.25}
+                placeholder="بدون مهلة"
+                value={hours}
+                onChange={(event) => setHours(event.target.value)}
+              />
+            </label>
+          </div>
+          <p className="hint">
+            {minutes ? `الحالية: ${number(Math.round((minutes / 60) * 100) / 100)} ساعة.` : "الحالية: بدون مهلة."}
+          </p>
+          <div className="inline">
+            <button className="btn btn-primary" disabled={busy || wanted === minutes || (wanted !== null && !(wanted >= 15))}>
+              <Icon name="check" size={16} />
+              حفظ المهلة
+            </button>
+            {minutes ? (
+              <button type="button" className="btn ghost" disabled={busy} onClick={() => void save(null)}>
+                إلغاء المهلة
+              </button>
+            ) : null}
+          </div>
+        </form>
+      )}
+    </section>
+  );
+}
+
 export function RulesPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState("");
@@ -158,6 +248,7 @@ export function RulesPage() {
             </div>
             <p className="hint">يُحسب الغياب من {settings.tracking_since}، تاريخ بدء استخدام النظام.</p>
           </section>
+          <WorkTimeCard />
         </>
       )}
     </div>
