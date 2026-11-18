@@ -32,6 +32,7 @@ export const OFFER_RESPONSE: Record<string, string> = {
   declined: "رفض",
   expired: "انتهت المهلة",
   cancelled: "أُلغي",
+  taken: "قبِله مستعلم آخر",
 };
 
 export const EVENT_LABEL: Record<string, string> = {

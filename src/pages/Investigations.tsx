@@ -43,6 +43,13 @@ interface Row {
   investigator_price: number;
 }
 
+/** Taken by the app at the start of every visit (proof the investigator was there). */
+const VISIT_PHOTOS: Record<string, string> = {
+  visit_selfie: "صورة شخصية للمستعلم عند الزيارة",
+  investigator_id_front: "بطاقة المستعلم — الوجه الأمامي",
+  investigator_id_back: "بطاقة المستعلم — الوجه الخلفي",
+};
+
 const OPEN = ["open", "assigned", "in_progress", "returned"];
 const overdue = (row: Row) => Boolean(row.due_at && OPEN.includes(row.status) && new Date(row.due_at) < new Date());
 
@@ -388,6 +395,37 @@ function CaseDrawer({
                         </li>
                       ))}
                   </ul>
+                </section>
+              )}
+              {item.images.some((image) => image.field_key in VISIT_PHOTOS) && (
+                <section>
+                  <h3>إثبات الزيارة</h3>
+                  <dl className="review-facts answer-list">
+                    {Object.entries(VISIT_PHOTOS).map(([key, label]) => {
+                      const shots = item.images.filter((image) => image.field_key === key);
+                      return (
+                        <div className="photo-row" key={key}>
+                          <dt>{label}</dt>
+                          <dd className="photo-strip">
+                            {shots.length ? (
+                              shots.map((image) => (
+                                <span className="id-frame" key={image.image_id}>
+                                  <SecureImage
+                                    path={`/investigations/${id}/images/${image.image_id}`}
+                                    alt={label}
+                                    fallback={<span className="hint">غير متوفرة</span>}
+                                    onOpen={setZoomed}
+                                  />
+                                </span>
+                              ))
+                            ) : (
+                              <span className="hint">لم تُلتقط</span>
+                            )}
+                          </dd>
+                        </div>
+                      );
+                    })}
+                  </dl>
                 </section>
               )}
               {item.sections.map((section) => {
