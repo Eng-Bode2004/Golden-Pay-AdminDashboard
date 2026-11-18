@@ -27,7 +27,22 @@ interface RequestDetail {
   profile_image: boolean;
   /** The area the investigator said they cover, chosen at signup; null when not chosen yet. */
   work_area?: WorkArea | null;
+  /** Every area the applicant serves, the primary one first. */
+  service_areas?: ServiceArea[];
 }
+
+export interface ServiceArea {
+  area_id: string;
+  is_primary: boolean;
+  governorate: string;
+  district: string | null;
+  local_unit: string | null;
+  main_village: string | null;
+  sub_village: string | null;
+}
+
+export const areaLabel = (area: ServiceArea) =>
+  [area.governorate, area.district, area.local_unit, area.main_village, area.sub_village].filter(Boolean).join(" - ");
 
 interface WorkArea {
   governorate: string | null;
@@ -254,8 +269,22 @@ export function ReviewDrawer({
                 )}
               </section>
 
+              {(detail.service_areas?.filter((area) => !area.is_primary).length ?? 0) > 0 && (
+                <section>
+                  <h3>كل المناطق التي يغطيها ({detail.service_areas!.length})</h3>
+                  <ul className="area-list">
+                    {detail.service_areas!.map((area) => (
+                      <li key={area.area_id}>
+                        {areaLabel(area)}
+                        {area.is_primary && <span className="badge">الأساسية</span>}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
               <section>
-                <h3>منطقة العمل التي يغطيها</h3>
+                <h3>منطقة العمل الأساسية</h3>
                 {detail.work_area ? (
                   <>
                     <dl className="review-facts">

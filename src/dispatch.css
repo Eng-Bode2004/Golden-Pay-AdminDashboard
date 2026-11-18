@@ -30,3 +30,7 @@ tr.next-in-line td { background: #d9c2a00d; }
   .waiting-head small, .waiting-head svg { display: none; }
   .search-field input { min-width: 0; width: 100%; }
 }
+/* Several areas per investigator */
+.area-list { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.area-list li { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 13px; color: var(--muted); }
+.more-areas { color: var(--gold-2); margin-inline-start: 6px; }

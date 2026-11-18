@@ -37,6 +37,9 @@ interface WorkArea {
   user_id: string;
   governorate: string | null;
   district: string | null;
+  /** Every area served ("الجيزة - الدقي | القاهرة"), the primary one first. */
+  areas_label?: string | null;
+  areas_count?: number;
 }
 
 export function PeoplePage() {
@@ -289,10 +292,13 @@ export function PeoplePage() {
                     <td>
                       <Status status={person.status} />
                     </td>
-                    <td>
+                    <td title={areas.get(person.user_id)?.areas_label?.split(" | ").join("، ") ?? undefined}>
                       {[areas.get(person.user_id)?.governorate, areas.get(person.user_id)?.district]
                         .filter(Boolean)
                         .join(" - ") || "—"}
+                      {(areas.get(person.user_id)?.areas_count ?? 0) > 1 && (
+                        <small className="more-areas"> +{number((areas.get(person.user_id)?.areas_count ?? 1) - 1)} مناطق</small>
+                      )}
                     </td>
                     <td>
                       {performance.get(person.user_id)

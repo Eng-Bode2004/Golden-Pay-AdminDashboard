@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import { api } from "../api";
 import { money, MonthPicker, monthLabel, thisMonth, TrendBars } from "../components/Finance";
 import { between, minutesLabel, OFFER_RESPONSE, Stamp } from "../components/Timing";
-import { ReviewDrawer, SecureImage } from "../components/ReviewDrawer";
+import { areaLabel, type ServiceArea, ReviewDrawer, SecureImage } from "../components/ReviewDrawer";
 import { Avatar, date, ErrorMessage, Icon, number, Status } from "../components/ui";
 
 interface Account {
@@ -33,6 +33,8 @@ interface Area {
   street?: string;
   lat?: number | null;
   lng?: number | null;
+  /** Every area they serve, the primary one first. */
+  areas?: ServiceArea[];
 }
 interface Stats {
   total: number;
@@ -271,10 +273,22 @@ export default function InvestigatorProfilePage() {
         </section>
         <section className="glass panel">
           <div className="panel-heading">
-            <h2>منطقة العمل</h2>
+            <h2>مناطق العمل{(area?.areas?.length ?? 0) > 1 ? ` (${number(area!.areas!.length)})` : ""}</h2>
           </div>
           <div className="profile-area">
             <p>{place || "لم يحدد منطقته بعد"}</p>
+            {(area?.areas?.filter((item) => !item.is_primary).length ?? 0) > 0 && (
+              <ul className="area-list">
+                {area!.areas!
+                  .filter((item) => !item.is_primary)
+                  .map((item) => (
+                    <li key={item.area_id}>
+                      {areaLabel(item)}
+                      <span className="badge">منطقة إضافية</span>
+                    </li>
+                  ))}
+              </ul>
+            )}
             {area?.street && <small>{area.street}</small>}
             {area?.lat && area.lng ? <AreaMap lat={area.lat} lng={area.lng} /> : <p className="hint">لم يحدد موقعه على الخريطة.</p>}
           </div>
