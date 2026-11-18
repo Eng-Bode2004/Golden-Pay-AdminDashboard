@@ -76,6 +76,8 @@ interface CaseCheck {
   report_issues: { kind: string; label: string; message: string }[];
   report_layout: string | null;
   report_error: string | null;
+  has_docx?: boolean;
+  edited?: { at: string; note: string | null; by: string | null } | null;
   template: { version_no: number | null; layout_mode: string; title: string; matches: boolean };
   evidence: { photos: Record<string, number>; locations: number };
 }
@@ -275,6 +277,31 @@ function CaseDrawer({
     }
   }
 
+  /** The admin replaces the report with an edited PDF or Word file. */
+  async function uploadEdited(file: File) {
+    const note = window.prompt("ما الذي عدّلته؟ (اختياري — يظهر في سجل الاستعلام)") ?? "";
+    setBusy(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      if (note.trim()) form.append("note", note.trim());
+      await api(`/investigations/${id}/report`, { method: "POST", body: form });
+      onChanged();
+      await load();
+      setCheck(await api<CaseCheck>(`/investigations/${id}/check`).catch(() => null));
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "تعذّر رفع التقرير المعدّل.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function rebuild() {
+    if (!window.confirm("إعادة إنشاء التقرير من إجابات المستعلم؟ ستُستبدل النسخة المعدّلة التي رفعتها.")) return;
+    await act("pdf");
+  }
+
   async function openPdf(kind: "pdf" | "report.docx" = "pdf") {
     try {
       const url = URL.createObjectURL(await apiBlob(`/investigations/${id}/${kind}`));
@@ -353,15 +380,18 @@ function CaseDrawer({
                     <strong>تقرير PDF</strong>
                     <small>
                       {item.pdf_status === "ready"
-                        ? "جاهز للتنزيل"
+                        ? check?.edited
+                          ? `نسخة معدّلة رفعها ${check.edited.by ?? "مدير"} — ${new Date(check.edited.at).toLocaleString(document.documentElement.lang === "en" ? "en-US" : "ar-EG")}`
+                          : "جاهز للتنزيل"
                         : item.pdf_status === "failed"
                           ? "تعذّر إنشاء التقرير"
                           : "جارٍ إنشاء التقرير…"}
                     </small>
+                    {check?.edited?.note && <small className="hint">«{check.edited.note}»</small>}
                   </div>
                   {item.pdf_status === "ready" ? (
                     <span className="pdf-actions">
-                      {check?.report_layout === "docx" && (
+                      {(check?.has_docx ?? check?.report_layout === "docx") && (
                         <button className="btn small" onClick={() => void openPdf("report.docx")}>
                           Word
                         </button>
@@ -375,6 +405,39 @@ function CaseDrawer({
                       إعادة المحاولة
                     </button>
                   ) : null}
+                </section>
+              )}
+              {item.submitted_at && item.pdf_status !== "generating" && (
+                <section className="report-edit">
+                  <div>
+                    <strong>تعديل التقرير</strong>
+                    <small>
+                      نزّل نسخة Word أو PDF، عدّلها على جهازك، ثم ارفعها هنا لتصبح هي التقرير. ملف Word يُحوَّل إلى PDF تلقائيًا.
+                    </small>
+                  </div>
+                  <span className="pdf-actions">
+                    <label className={`btn small${busy ? " disabled" : ""}`}>
+                      <Icon name="file" size={15} />
+                      رفع نسخة معدّلة
+                      <input
+                        type="file"
+                        accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        hidden
+                        disabled={busy}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          event.target.value = "";
+                          if (file) void uploadEdited(file);
+                        }}
+                      />
+                    </label>
+                    {check?.edited && (
+                      <button className="btn small ghost" disabled={busy} onClick={() => void rebuild()}>
+                        <Icon name="refresh" size={15} />
+                        من الإجابات
+                      </button>
+                    )}
+                  </span>
                 </section>
               )}
               {check && (

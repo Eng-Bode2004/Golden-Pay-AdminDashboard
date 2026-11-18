@@ -2,6 +2,14 @@ import { initAppearance } from "./themes";
 
 const english: Record<string, string> = {
   // Head Office templates and versioned client forms
+  "ما الذي عدّلته؟ (اختياري — يظهر في سجل الاستعلام)": "What did you change? (optional — shown in the case history)",
+  "تعذّر رفع التقرير المعدّل.": "Couldn't upload the edited report.",
+  "إعادة إنشاء التقرير من إجابات المستعلم؟ ستُستبدل النسخة المعدّلة التي رفعتها.": "Rebuild the report from the investigator's answers? The edited copy you uploaded will be replaced.",
+  "تعديل التقرير": "Edit the report",
+  "نزّل نسخة Word أو PDF، عدّلها على جهازك، ثم ارفعها هنا لتصبح هي التقرير. ملف Word يُحوَّل إلى PDF تلقائيًا.": "Download the Word or PDF copy, edit it on your computer, then upload it here to make it the report. A Word file is turned into PDF automatically.",
+  "رفع نسخة معدّلة": "Upload edited copy",
+  "من الإجابات": "From the answers",
+  "عدّل المدير التقرير": "Admin edited the report",
   "المهلة والاعتذار عن الاستعلام": "Time limit and excuses",
   "خصم الاعتذار بعد القبول (ج.م)": "Charge for excusing after accepting (EGP)",
   "اعتذر عنه بعد القبول": "Excused themselves after accepting",

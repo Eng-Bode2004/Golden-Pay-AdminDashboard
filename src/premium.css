@@ -721,3 +721,10 @@ html[lang="en"] .account-back svg { transform: none; }
 .excuse-list p { margin: 6px 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
 .excuse-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12.5px; }
 .badge.danger-badge { color: var(--danger); border-color: rgba(255, 138, 128, 0.4); }
+
+/* Admin replaces the report with an edited file */
+.report-edit { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 15px; border-radius: 15px; border: 1px dashed rgba(var(--tint-rgb), 0.35); }
+.report-edit > div { flex: 1; min-width: 200px; display: grid; gap: 3px; }
+.report-edit small { color: var(--muted); font-size: 12.5px; line-height: 1.6; }
+.report-edit label.btn { cursor: pointer; }
+.report-edit label.btn.disabled { opacity: 0.55; pointer-events: none; }
