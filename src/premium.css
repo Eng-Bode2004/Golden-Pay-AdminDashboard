@@ -676,3 +676,12 @@ html[lang="en"] .account-back svg { transform: none; }
 .case-check li span { flex-shrink: 0; padding: 1px 7px; border-radius: 6px; font-size: 10.5px; color: var(--muted); background: rgba(255, 255, 255, 0.06); }
 .case-check li.k-unsupported_statement span, .case-check li.k-missing span { color: var(--danger); background: rgba(255, 178, 182, 0.1); }
 .case-check li.k-unplaced span { color: #9ec5ff; background: rgba(158, 197, 255, 0.1); }
+
+/* A checkbox with its label beside it (not a full-width input). */
+.field.checkbox-field { flex-direction: row; align-items: flex-start; gap: 10px; cursor: pointer; }
+.field.checkbox-field input { width: auto; flex: none; margin-top: 3px; accent-color: var(--danger); }
+.danger-card { border-color: rgba(255, 138, 128, 0.32); }
+.danger-card .reset-counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; margin: 10px 0 14px; font-size: 13px; }
+.danger-card .reset-counts b { color: var(--danger); font-variant-numeric: tabular-nums; }
+
+.side-stack { display: grid; gap: 22px; align-content: start; }

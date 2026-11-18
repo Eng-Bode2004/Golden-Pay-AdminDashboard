@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from "react";
+import { DeleteInvestigatorDrawer } from "../components/DeleteInvestigatorDrawer";
+import { TestDataReset } from "../components/TestDataReset";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { money } from "../components/Finance";
 import { api, ApiRequestError } from "../api";
@@ -61,6 +63,7 @@ export function PeoplePage() {
   const [busy, setBusy] = useState(false);
   const [actionId, setActionId] = useState("");
   const [reviewing, setReviewing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<UserRow | null>(null);
   const [reload, setReload] = useState(0);
   const [form, setForm] = useState({
     full_name: "",
@@ -335,9 +338,14 @@ export function PeoplePage() {
                           >
                             إعادة تنشيط
                           </button>
-                        ) : (
-                          "—"
-                        )}
+                        ) : null}
+                        <button
+                          className="btn ghost small btn-danger"
+                          title="حذف المستعلم وكل بياناته نهائيًا"
+                          onClick={() => setDeleting(person)}
+                        >
+                          حذف
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -370,6 +378,7 @@ export function PeoplePage() {
             </div>
           </div>
         </section>
+        <div className="side-stack">
         <form className="card" ref={createRef} onSubmit={createInvestigator}>
           <span className="eyebrow">توسّع بثقة</span>
           <h2>إضافة محقق جديد</h2>
@@ -433,7 +442,19 @@ export function PeoplePage() {
             بعد الإنشاء.
           </p>
         </form>
+        <TestDataReset onDone={() => setReload((value) => value + 1)} />
+        </div>
       </div>
+      {deleting && (
+        <DeleteInvestigatorDrawer
+          user={deleting}
+          onClose={() => setDeleting(null)}
+          onDeleted={() => {
+            setDeleting(null);
+            setReload((value) => value + 1);
+          }}
+        />
+      )}
       {reviewing && (
         <ReviewDrawer
           userId={reviewing}
