@@ -9,7 +9,6 @@ import { FormsPage } from "./pages/Forms";
 import { InvestigationsPage } from "./pages/Investigations";
 import { InvitePage } from "./pages/Invite";
 import { LeaderboardPage } from "./pages/Leaderboard";
-import { PricingPage } from "./pages/Pricing";
 import { LoginPage } from "./pages/Login";
 import { MessagesPage } from "./pages/Messages";
 import { MyPointsPage } from "./pages/MyPoints";
@@ -60,7 +59,6 @@ export function App() {
           }
         />
         <Route path="forms" element={<FormsPage />} />
-        <Route path="pricing" element={<PricingPage />} />
         <Route path="performance" element={<LeaderboardPage />} />
         <Route
           path="people/:id"

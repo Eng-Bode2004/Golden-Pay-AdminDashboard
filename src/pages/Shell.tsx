@@ -28,7 +28,6 @@ export function Shell() {
     { to: "/people", label: "المحققون", icon: "users" },
     { to: "/performance", label: "الأداء", icon: "chart" },
     { to: "/forms", label: "النماذج", icon: "grid" },
-    { to: "/pricing", label: "الأسعار", icon: "tag" },
     { to: "/audit", label: "سجل النشاط", icon: "history" },
     ...(security?.is_owner
       ? [{ to: "/administrators", label: "إدارة الفريق", icon: "shield" } as NavItem]
