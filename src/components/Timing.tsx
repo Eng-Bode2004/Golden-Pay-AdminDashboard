@@ -51,4 +51,8 @@ export const EVENT_LABEL: Record<string, string> = {
   approved: "اعتُمد",
   cancelled: "أُلغي",
   waiting: "بانتظار مستعلم متاح",
+  manually_assigned: "أُسند يدويًا إلى",
+  reassigned: "نُقل إلى",
+  accept_conflict: "حاول القبول بعد أن قبِله غيره",
+  fairness: "عدالة التوزيع",
 };

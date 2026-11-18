@@ -23,6 +23,7 @@ export function Shell() {
   const links: NavItem[] = [
     { to: "/", label: "نظرة عامة", icon: "home" },
     { to: "/investigations", label: "الاستعلامات", icon: "file" },
+    { to: "/dispatch", label: "التوزيع والعدالة", icon: "activity" },
     { to: "/requests", label: "طلبات التفعيل", icon: "inbox", badge: pending },
     { to: "/people", label: "المحققون", icon: "users" },
     { to: "/performance", label: "الأداء", icon: "chart" },

@@ -7,6 +7,7 @@ import "./styles.css";
 import "./locale";
 import "./premium.css";
 import "./points.css";
+import "./dispatch.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

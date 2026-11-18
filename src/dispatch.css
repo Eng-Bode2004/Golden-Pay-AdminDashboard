@@ -1,0 +1,32 @@
+/* Dispatch & fairness page */
+.dispatch-policy { display: grid; gap: 14px; }
+.engine-switch { display: inline-flex; flex-wrap: wrap; gap: 4px; }
+.check-row { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }
+.check-row input { accent-color: var(--gold); width: 16px; height: 16px; }
+.badge-danger { border-color: #ffb2b655; color: var(--danger); }
+.badge-ok { border-color: #a6dfcc55; color: var(--ok); }
+.link-small { background: none; border: 0; padding: 0; color: var(--gold-2); font: inherit; font-size: 12px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.search-field { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line-strong); border-radius: 12px; padding: 6px 10px; color: var(--muted-2); }
+.search-field input { background: none; border: 0; color: var(--ink); font: inherit; font-size: 13px; outline: none; min-width: 180px; }
+.btn-small { padding: 4px 10px; font-size: 11px; }
+.waiting-row { border-top: 1px solid var(--line); padding: 10px 0; display: grid; gap: 10px; }
+.waiting-head { display: grid; grid-template-columns: auto 1fr auto auto auto; gap: 12px; align-items: center; width: 100%; background: none; border: 0; color: var(--ink); font: inherit; text-align: start; cursor: pointer; padding: 4px 2px; }
+.waiting-head small { color: var(--muted-2); }
+.dispatch-decisions { display: grid; gap: 10px; }
+.decision { border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; display: grid; gap: 6px; background: #ffffff05; }
+.decision.shadow { border-style: dashed; opacity: 0.8; }
+.decision header { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.decision header small { color: var(--muted-2); margin-inline-start: auto; }
+.decision p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--muted); }
+.decision-list.muted { color: var(--muted-2); }
+.manual-assign { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; gap: 10px; align-items: end; }
+.service-areas { display: grid; gap: 10px; padding: 6px 0; }
+.service-areas ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.service-areas li { display: flex; gap: 10px; align-items: center; font-size: 13px; }
+tr.next-in-line td { background: #d9c2a00d; }
+@media (max-width: 720px) {
+  .manual-assign { grid-template-columns: 1fr; }
+  .waiting-head { grid-template-columns: 1fr auto; }
+  .waiting-head small, .waiting-head svg { display: none; }
+  .search-field input { min-width: 0; width: 100%; }
+}

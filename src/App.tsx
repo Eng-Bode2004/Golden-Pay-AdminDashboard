@@ -4,6 +4,7 @@ import { useAuth } from "./auth";
 import { Emblem } from "./components/ui";
 import { AdministratorsPage } from "./pages/Administrators";
 import { AuditPage } from "./pages/Audit";
+import { DispatchPage } from "./pages/Dispatch";
 import { FormsPage } from "./pages/Forms";
 import { InvestigationsPage } from "./pages/Investigations";
 import { InvitePage } from "./pages/Invite";
@@ -49,6 +50,7 @@ export function App() {
         <Route path="people" element={<PeoplePage />} />
         <Route path="requests" element={<RequestsPage />} />
         <Route path="investigations" element={<InvestigationsPage />} />
+        <Route path="dispatch" element={<DispatchPage />} />
         <Route
           path="investigations/new"
           element={

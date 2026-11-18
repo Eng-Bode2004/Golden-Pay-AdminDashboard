@@ -212,6 +212,17 @@ function CaseDrawer({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [returning, setReturning] = useState(false);
+  // Manual assignment / reassignment: who, and why (kept on the case and in the audit log).
+  const [assigning, setAssigning] = useState(false);
+  const [people, setPeople] = useState<{ user_id: string; full_name: string; status: string; score: number; active: number; governorate: string | null }[]>([]);
+  const [assignee, setAssignee] = useState("");
+  const [assignReason, setAssignReason] = useState("");
+  useEffect(() => {
+    if (!assigning || people.length) return;
+    api<{ investigators: typeof people }>("/investigations/dispatch/overview")
+      .then((data) => setPeople(data.investigators.filter((person) => person.status === "active")))
+      .catch(() => setError("تعذّر تحميل المستعلمين."));
+  }, [assigning, people.length]);
   const [note, setNote] = useState("");
   const [zoomed, setZoomed] = useState<string | null>(null);
   const [check, setCheck] = useState<CaseCheck | null>(null);
@@ -599,7 +610,40 @@ function CaseDrawer({
         </div>
         {(submitted || cancellable) && (
           <footer className="drawer-foot">
-            {returning ? (
+            {assigning ? (
+              <>
+                <label className="field">
+                  <span>{item?.status === "open" || item?.status === "unassigned" ? "إسناد إلى" : "نقل إلى"}</span>
+                  <select value={assignee} onChange={(event) => setAssignee(event.target.value)}>
+                    <option value="">اختر مستعلمًا</option>
+                    {people.map((person) => (
+                      <option key={person.user_id} value={person.user_id}>
+                        {person.full_name} — دوره {number(person.score)} · نشط {number(person.active)}
+                        {person.governorate ? ` · ${person.governorate}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  <span>السبب (يُسجَّل في سجل النشاط)</span>
+                  <input value={assignReason} maxLength={500} onChange={(event) => setAssignReason(event.target.value)} />
+                </label>
+                <div className="drawer-actions">
+                  <button
+                    className="btn btn-primary"
+                    disabled={busy || !assignee || assignReason.trim().length < 3}
+                    onClick={() =>
+                      void act("assign", { user_id: assignee, reason: assignReason.trim() }).then(() => setAssigning(false))
+                    }
+                  >
+                    تأكيد
+                  </button>
+                  <button className="btn ghost" onClick={() => setAssigning(false)}>
+                    تراجع
+                  </button>
+                </div>
+              </>
+            ) : returning ? (
               <>
                 <label className="field">
                   <span>ما المطلوب تعديله؟</span>
@@ -632,6 +676,9 @@ function CaseDrawer({
                     إعادة التوزيع
                   </button>
                 )}
+                <button className="btn ghost" disabled={busy} onClick={() => setAssigning(true)}>
+                  {item?.status === "open" || item?.status === "unassigned" ? "إسناد يدوي" : "نقل لمستعلم آخر"}
+                </button>
                 <button
                   className="btn ghost btn-danger"
                   disabled={busy}
@@ -665,7 +712,7 @@ export function InvestigationsPage() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(() => params.get("case"));
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
