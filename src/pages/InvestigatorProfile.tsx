@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { api } from "../api";
@@ -122,6 +122,7 @@ const percent = (part: number, whole: number) => (whole ? `${number(Math.round((
 
 export default function InvestigatorProfilePage() {
   const { id = "" } = useParams();
+  const office = useLocation().pathname.startsWith("/investigators");
   const [month, setMonth] = useState(thisMonth());
   const [account, setAccount] = useState<Account | null>(null);
   const [area, setArea] = useState<Area | null>(null);
@@ -151,7 +152,7 @@ export default function InvestigatorProfilePage() {
 
   return (
     <div className="page-enter profile-page">
-      <Link className="text-link account-back" to="/people">
+      <Link className="text-link account-back" to={office ? "/investigators" : "/dispatch"}>
         <Icon name="arrow" size={16} />
         عودة
       </Link>
@@ -353,7 +354,7 @@ export default function InvestigatorProfilePage() {
               {perf?.recent.map((row) => (
                 <tr key={row.investigation_id + row.offered_at}>
                   <td className="mono">
-                    <Link to={`/investigations?search=${row.reference}`}>{row.reference}</Link>
+                    {office ? row.reference : <Link to={`/investigations?search=${row.reference}`}>{row.reference}</Link>}
                   </td>
                   <td>{row.subject_name}</td>
                   <td>

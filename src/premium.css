@@ -710,3 +710,14 @@ html[lang="en"] .account-back svg { transform: none; }
 .badge.off-badge { color: var(--muted-2); border-color: var(--line); }
 @media (prefers-reduced-motion: reduce) { .client-chip { transition: none; } .client-chip:hover:not(:disabled) { transform: none; } }
 .finance-grid.single { grid-template-columns: minmax(0, 1fr); }
+
+/* Excuses after accepting (head office) */
+.excuses-panel { margin-bottom: 18px; }
+.excuse-list { list-style: none; margin: 0; padding: 0 22px 18px; display: grid; gap: 10px; }
+.excuse-list li { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; background: rgba(255, 255, 255, 0.025); }
+.excuse-list li > div:first-child { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; }
+.excuse-who { color: var(--gold-2); font-weight: 600; text-decoration: none; }
+.excuse-who:hover { text-decoration: underline; }
+.excuse-list p { margin: 6px 0; color: var(--muted); font-size: 13.5px; line-height: 1.6; }
+.excuse-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 12.5px; }
+.badge.danger-badge { color: var(--danger); border-color: rgba(255, 138, 128, 0.4); }

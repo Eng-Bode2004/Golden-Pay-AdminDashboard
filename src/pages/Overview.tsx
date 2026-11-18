@@ -131,10 +131,6 @@ export function OverviewPage() {
           >
             <Icon name="refresh" className={busy ? "spinning" : ""} />
           </button>
-          <Link className="btn btn-primary" to="/people?create=1">
-            <Icon name="plus" size={18} />
-            إضافة محقق
-          </Link>
         </div>
       </div>
       <ErrorMessage message={error} />
@@ -169,9 +165,6 @@ export function OverviewPage() {
                 <span className="eyebrow">فريق جولدن باي</span>
                 <h2>أحدث الحسابات</h2>
               </div>
-              <Link className="text-link" to="/people">
-                عرض الجميع <Icon name="arrow" size={16} />
-              </Link>
             </div>
             <div className="table-wrap">
               <table className="table">
@@ -210,7 +203,7 @@ export function OverviewPage() {
                       </td>
                       <td>
                         <Link
-                          to={`/people?search=${encodeURIComponent(person.employee_number ?? person.full_name)}`}
+                          to={`/people/${person.user_id}`}
                           className="table-arrow"
                           aria-label={`عرض ${person.full_name}`}
                         >

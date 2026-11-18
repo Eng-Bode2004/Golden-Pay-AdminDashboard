@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api, ApiRequestError } from "../api";
 import { useAuth } from "../auth";
+import { TestDataReset } from "../components/TestDataReset";
 import { Avatar, date, Empty, ErrorMessage, Icon } from "../components/ui";
 
 interface AdminRow {
@@ -382,6 +383,7 @@ export function AdministratorsPage() {
         </div>
         {!invites.length && <Empty>لم تُرسل أي دعوات بعد.</Empty>}
       </section>
+      <TestDataReset onDone={() => undefined} />
     </div>
   );
 }

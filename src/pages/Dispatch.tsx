@@ -131,6 +131,7 @@ const END_REASONS: Record<string, string> = {
   cancelled: "أُلغي",
   reassigned: "نُقل لمستعلم آخر",
   timed_out: "سُحب لانتهاء مهلة الإنجاز",
+  excused: "اعتذر بعد القبول",
 };
 
 function PolicyPanel({ policy, onSaved }: { policy: Policy; onSaved: (policy: Policy) => void }) {

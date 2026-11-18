@@ -25,7 +25,6 @@ export function Shell() {
     { to: "/investigations", label: "الاستعلامات", icon: "file" },
     { to: "/dispatch", label: "التوزيع والعدالة", icon: "activity" },
     { to: "/requests", label: "طلبات التفعيل", icon: "inbox", badge: pending },
-    { to: "/people", label: "المحققون", icon: "users" },
     { to: "/performance", label: "الأداء", icon: "chart" },
     { to: "/forms", label: "النماذج", icon: "grid" },
     { to: "/audit", label: "سجل النشاط", icon: "history" },
@@ -147,12 +146,12 @@ export function Shell() {
             role="search"
             onSubmit={(event) => {
               event.preventDefault();
-              navigate(`/people?search=${encodeURIComponent(search)}`);
+              navigate(`/investigations?search=${encodeURIComponent(search)}`);
             }}
           >
             <input
-              aria-label="ابحث عن محقق أو رقم موظف"
-              placeholder="ابحث عن محقق…"
+              aria-label="ابحث عن استعلام أو اسم"
+              placeholder="ابحث في الاستعلامات…"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
             />

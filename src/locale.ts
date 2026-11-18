@@ -2,6 +2,20 @@ import { initAppearance } from "./themes";
 
 const english: Record<string, string> = {
   // Head Office templates and versioned client forms
+  "المهلة والاعتذار عن الاستعلام": "Time limit and excuses",
+  "خصم الاعتذار بعد القبول (ج.م)": "Charge for excusing after accepting (EGP)",
+  "اعتذر عنه بعد القبول": "Excused themselves after accepting",
+  "اعتذر بعد القبول": "Excused after accepting",
+  "اعتذارات بعد القبول": "Excuses after accepting",
+  "بدون خصم": "No charge",
+  "حُذف الاستعلام": "Investigation deleted",
+  "تم سؤال:": "Asked:",
+  "ابحث في الاستعلامات…": "Search investigations…",
+  "ابحث عن استعلام أو اسم": "Search for an investigation or a name",
+  "يُعرض على مستعلم آخر": "Offered to another investigator",
+  "لم يقبله أحد — يحتاج تدخل الإدارة": "Nobody accepted — needs the admin",
+  "أُرسل التقرير": "Report sent",
+  "مع": "With",
   "تعذّر تحميل بيانات الهاتف.": "Couldn't load the phone details.",
   "إعادة تعيين الهاتف؟ سيُسجَّل خروجه من الهاتف الحالي، وأول هاتف يسجّل منه الدخول بعدها يصبح هاتفه.": "Reset the phone? They will be signed out of the current phone, and the first phone they sign in from next becomes theirs.",
   "أُعيد تعيين الهاتف. سيُسجَّل هاتفه الجديد عند أول دخول.": "Phone reset. Their new phone is registered at their next sign-in.",

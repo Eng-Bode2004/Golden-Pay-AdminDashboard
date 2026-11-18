@@ -160,6 +160,7 @@ interface Detail extends Row {
   lng: number | null;
   negative_reasons: string[] | null;
   negative_note: string | null;
+  negative_asked?: string | null;
   locations?: TrailPoint[];
   created_at: string;
   reviewed_at: string | null;
@@ -492,6 +493,7 @@ function CaseDrawer({
                       <li key={reason}>{reason}</li>
                     ))}
                   </ul>
+                  {item.negative_asked && <p><b>تم سؤال:</b> {item.negative_asked}</p>}
                   <p>{item.negative_note}</p>
                 </section>
               )}

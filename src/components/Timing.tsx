@@ -45,6 +45,7 @@ export const EVENT_LABEL: Record<string, string> = {
   unassigned: "لم يقبله أحد",
   redispatched: "أُعيد توزيعه",
   timed_out: "سُحب لانتهاء مهلة الإنجاز",
+  excused: "اعتذر عنه بعد القبول",
   started: "بدأ العمل",
   submitted: "أرسل التقرير",
   resubmitted: "أعاد إرسال التقرير",

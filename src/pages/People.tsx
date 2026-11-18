@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { DeleteInvestigatorDrawer } from "../components/DeleteInvestigatorDrawer";
-import { TestDataReset } from "../components/TestDataReset";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { money } from "../components/Finance";
 import { api, ApiRequestError } from "../api";
 import { ReviewDrawer } from "../components/ReviewDrawer";
@@ -46,6 +45,8 @@ interface WorkArea {
 
 export function PeoplePage() {
   const navigate = useNavigate();
+  // Head office manages investigators at /investigators (the admin dashboard used /people).
+  const base = useLocation().pathname.startsWith("/investigators") ? "/investigators" : "/people";
   const [performance, setPerformance] = useState<Map<string, Performance>>(new Map());
   const [areas, setAreas] = useState<Map<string, WorkArea>>(new Map());
   const [params, setParams] = useSearchParams();
@@ -275,7 +276,7 @@ export function PeoplePage() {
                   <tr
                     key={person.user_id}
                     className="clickable"
-                    onClick={() => navigate(`/people/${person.user_id}`)}
+                    onClick={() => navigate(`${base}/${person.user_id}`)}
                   >
                     <td>
                       <div className="person-cell">
@@ -442,7 +443,6 @@ export function PeoplePage() {
             بعد الإنشاء.
           </p>
         </form>
-        <TestDataReset onDone={() => setReload((value) => value + 1)} />
         </div>
       </div>
       {deleting && (
