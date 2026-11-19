@@ -14,7 +14,6 @@ export function Shell() {
   );
   const [search, setSearch] = useState("");
   const [notifications, setNotifications] = useState(false);
-  const [pending, setPending] = useState<number | null>(null);
   const [replies, setReplies] = useState(0);
   const [today, setToday] = useState<{ tracked: boolean; summary?: Tally; today?: { first_seen: string; late_minutes: number } | null } | null>(null);
   const popover = useRef<HTMLDivElement>(null);
@@ -24,7 +23,6 @@ export function Shell() {
     { to: "/", label: "نظرة عامة", icon: "home" },
     { to: "/investigations", label: "الاستعلامات", icon: "file" },
     { to: "/dispatch", label: "التوزيع والعدالة", icon: "activity" },
-    { to: "/requests", label: "طلبات التفعيل", icon: "inbox", badge: pending },
     { to: "/performance", label: "الأداء", icon: "chart" },
     { to: "/forms", label: "النماذج", icon: "grid" },
     { to: "/audit", label: "سجل النشاط", icon: "history" },
@@ -42,17 +40,6 @@ export function Shell() {
         })
         .catch(() => {
           if (active) setHealth("offline");
-        });
-      api<{ users: Record<string, number> }>("/admin/stats")
-        .then((data) => {
-          if (active)
-            setPending(
-              (data.users.pending_approval ?? 0) +
-                (data.users.pending_verification ?? 0),
-            );
-        })
-        .catch(() => {
-          if (active) setPending(null);
         });
       api<{ unread: number }>("/complaints/mine?kind=message")
         .then((data) => active && setReplies(data.unread))
@@ -180,29 +167,14 @@ export function Shell() {
               onClick={() => setNotifications(!notifications)}
             >
               <Icon name="bell" />
-              {!!((pending ?? 0) + replies) && <i className="notification-dot" />}
+              {!!replies && <i className="notification-dot" />}
             </button>
             {notifications && (
               <div className="notification-popover notify-center glass" role="dialog" aria-label="الإشعارات">
                 <header>
                   <h3>الإشعارات</h3>
-                  {!!((pending ?? 0) + replies) && <span className="nav-badge">{number((pending ?? 0) + replies)}</span>}
+                  {!!replies && <span className="nav-badge">{number(replies)}</span>}
                 </header>
-                <Link to="/requests" className={`notify-row${pending ? " unread" : ""}`}>
-                  <span className="notify-icon">
-                    <Icon name="inbox" size={18} />
-                  </span>
-                  <span>
-                    <strong>طلبات التفعيل</strong>
-                    <small>
-                      {pending === null
-                        ? "تعذّر تحميل الطلبات حالياً."
-                        : pending
-                          ? `${number(pending)} طلب بانتظار مراجعتك`
-                          : "لا توجد طلبات معلّقة"}
-                    </small>
-                  </span>
-                </Link>
                 <Link to="/messages" className={`notify-row${replies ? " unread" : ""}`}>
                   <span className="notify-icon">
                     <Icon name="message" size={18} />

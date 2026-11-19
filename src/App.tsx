@@ -13,7 +13,6 @@ import { LoginPage } from "./pages/Login";
 import { MessagesPage } from "./pages/Messages";
 import { MyPointsPage } from "./pages/MyPoints";
 import { OverviewPage } from "./pages/Overview";
-import { RequestsPage } from "./pages/Requests";
 import { SecurityPage } from "./pages/Security";
 import { Shell } from "./pages/Shell";
 
@@ -46,7 +45,7 @@ export function App() {
         <Route index element={<OverviewPage />} />
         <Route path="administrators" element={<AdministratorsPage />} />
         <Route path="people" element={<Navigate to="/" replace />} />
-        <Route path="requests" element={<RequestsPage />} />
+        <Route path="requests" element={<Navigate to="/" replace />} />
         <Route path="investigations" element={<InvestigationsPage />} />
         <Route path="dispatch" element={<DispatchPage />} />
         <Route

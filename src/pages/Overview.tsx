@@ -95,7 +95,7 @@ export function OverviewPage() {
     {
       label: "بانتظار المراجعة",
       value: stats ? pending : undefined,
-      detail: "طلبات تحتاج إلى اهتمامك",
+      detail: "تراجعها الإدارة العليا",
       icon: "clock",
       tone: "amber",
     },
@@ -223,9 +223,6 @@ export function OverviewPage() {
                 <i className="live-dot" />
                 بيانات مباشرة من خدمة الهوية
               </span>
-              <Link to="/requests">
-                مراجعة الطلبات <Icon name="arrow" size={15} />
-              </Link>
             </div>
           </section>
           <div className="overview-bottom">
