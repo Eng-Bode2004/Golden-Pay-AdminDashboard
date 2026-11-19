@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { Link, useSearchParams } from "react-router-dom";
 import { api, apiBlob, ApiRequestError } from "../api";
 import { SecureImage } from "../components/ReviewDrawer";
-import { money } from "../components/Finance";
 import { between, EVENT_LABEL, minutesLabel, OFFER_RESPONSE, Stamp } from "../components/Timing";
 import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
@@ -362,14 +361,6 @@ function CaseDrawer({
                     <dd>
                       <Deadline row={item} />
                     </dd>
-                  </div>
-                  <div>
-                    <dt>سعر العميل</dt>
-                    <dd>{money(item.client_price)}</dd>
-                  </div>
-                  <div>
-                    <dt>أجر المستعلم</dt>
-                    <dd>{money(item.investigator_price)}</dd>
                   </div>
                 </dl>
               </section>

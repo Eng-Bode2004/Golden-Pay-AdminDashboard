@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api";
-import { money, MonthPicker, monthLabel, thisMonth } from "../components/Finance";
+import { MonthPicker, monthLabel, thisMonth } from "../components/Finance";
 import { minutesLabel } from "../components/Timing";
 import { Avatar, ErrorMessage, Icon, number } from "../components/ui";
 
@@ -49,13 +49,6 @@ const BOARDS: { key: string; label: string; hint: string; sort: (a: Row, b: Row)
     sort: (a, b) => (a.avg_response_minutes ?? 1e9) - (b.avg_response_minutes ?? 1e9),
     value: (row) => minutesLabel(row.avg_response_minutes),
   },
-  {
-    key: "earned",
-    label: "الأعلى أرباحاً",
-    hint: "أرباح التقارير المعتمدة هذا الشهر",
-    sort: (a, b) => b.earned_month - a.earned_month,
-    value: (row) => money(row.earned_month),
-  },
 ];
 
 export function LeaderboardPage() {
@@ -83,7 +76,7 @@ export function LeaderboardPage() {
           <h1>
             من يصنع الفارق. <span>{monthLabel(month)}.</span>
           </h1>
-          <p className="page-description">ترتيب المستعلمين حسب النشاط والتقدم وسرعة الاستجابة والأرباح.</p>
+          <p className="page-description">ترتيب المستعلمين حسب النشاط والتقدم وسرعة الاستجابة.</p>
         </div>
         <MonthPicker value={month} onChange={setMonth} />
       </div>
@@ -123,7 +116,6 @@ export function LeaderboardPage() {
                 <th>زمن الرد</th>
                 <th>من المشاهدة للإنجاز</th>
                 <th>الالتزام بالموعد</th>
-                <th>الأرباح</th>
               </tr>
             </thead>
             <tbody>
@@ -153,7 +145,6 @@ export function LeaderboardPage() {
                   <td>{minutesLabel(row.avg_response_minutes)}</td>
                   <td>{minutesLabel(row.avg_seen_to_submit_hours === null ? null : row.avg_seen_to_submit_hours * 60)}</td>
                   <td>{percent(row.on_time_rate)}</td>
-                  <td>{money(row.earned_month)}</td>
                 </tr>
               ))}
             </tbody>

@@ -14,7 +14,6 @@ import {
   type IconName,
 } from "../components/ui";
 import { eventLabel } from "../labels";
-import { FinancePanel } from "../components/FinancePanel";
 
 interface Stats {
   users: Record<string, number>;
@@ -156,7 +155,6 @@ export function OverviewPage() {
           </article>
         ))}
       </div>
-      <FinancePanel />
       <div className="overview-layout">
         <div className="overview-primary">
           <section className="glass panel team-panel">
