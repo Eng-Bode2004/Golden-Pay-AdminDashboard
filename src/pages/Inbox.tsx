@@ -124,25 +124,38 @@ function bodyText(value: string | null | undefined): string {
 
 // ───────────── one attachment, fetched with the admin's token ─────────────
 
+/** Types safe to show in this origin. Anything else from an email is only downloaded, never opened. */
+const VIEWABLE = ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp", "application/pdf"];
+
 function Attachment({ messageId, file }: { messageId: string; file: { index: number; name: string; type: string; bytes: number } }) {
   const [url, setUrl] = useState<string | null>(null);
-  const image = file.type.startsWith("image/");
+  const type = file.type.toLowerCase();
+  const viewable = VIEWABLE.includes(type);
+  const image = viewable && type.startsWith("image/");
   useEffect(() => {
     if (!image) return;
     let revoked: string | null = null;
     apiBlob(`/investigations/intake/messages/${messageId}/files/${file.index}`)
       .then((blob) => {
-        revoked = URL.createObjectURL(blob);
+        revoked = URL.createObjectURL(new Blob([blob], { type }));
         setUrl(revoked);
       })
       .catch(() => setUrl(null));
     return () => {
       if (revoked) URL.revokeObjectURL(revoked);
     };
-  }, [messageId, file.index, image]);
+  }, [messageId, file.index, image, type]);
   async function open() {
     const blob = await apiBlob(`/investigations/intake/messages/${messageId}/files/${file.index}`);
-    window.open(URL.createObjectURL(blob), "_blank", "noopener");
+    const url = URL.createObjectURL(new Blob([blob], { type: viewable ? type : "application/octet-stream" }));
+    if (viewable) window.open(url, "_blank", "noopener");
+    else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.name;
+      link.click();
+    }
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
   if (image && file.bytes < 15_000) return null;
   return image ? (
