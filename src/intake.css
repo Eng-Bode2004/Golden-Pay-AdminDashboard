@@ -89,3 +89,21 @@
   .mail-attachment.image { width: 46%; height: 120px; }
   .recipient { flex-direction: column; align-items: flex-start; }
 }
+
+/* Setup and system check */
+.mail-cases-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.mail-cases-head h3 { margin: 0; }
+.setup-box { display: grid; gap: 12px; padding: 14px 16px; margin-bottom: 16px; border-radius: 16px; border: 1px solid rgba(242, 207, 155, 0.3); background: linear-gradient(150deg, rgba(242, 207, 155, 0.08), rgba(255, 255, 255, 0.02)); justify-items: start; }
+.setup-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; width: 100%; }
+.setup-head div { display: grid; gap: 3px; }
+.setup-head small { color: var(--muted); font-size: 12px; }
+.setup-list, .check-lines { list-style: none; margin: 0; padding: 0; display: grid; width: 100%; }
+.setup-list li, .check-lines li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 9px 2px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.setup-list li b { min-width: 170px; }
+.setup-list li small, .check-lines li small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.check-lines li b { min-width: 64px; font-size: 12px; }
+.check-lines li span { min-width: 190px; }
+.check-lines .ok b, .setup-list .ok b { color: #8ce6bd; }
+.check-lines .warn b, .setup-list .warn b { color: #f2cf9b; }
+.check-lines .fail b, .setup-list .fail b { color: var(--danger); }
+.attention-mail { margin-bottom: 16px; }

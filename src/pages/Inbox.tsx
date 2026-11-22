@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { api, apiBlob, ApiRequestError } from "../api";
+import { IntakeCheck, IntakeSetup } from "../components/IntakeSetup";
 import { Empty, ErrorMessage, Icon, number } from "../components/ui";
 import "../intake.css";
 
@@ -36,6 +37,8 @@ const CASE_STATUS: Record<string, string> = {
 interface Overview {
   inboxes: { name: string; configured: boolean; last_poll_at?: string; last_ok_at?: string; last_error?: string | null }[];
   ai: { configured: boolean; model: string };
+  intake_off?: boolean;
+  attention?: number;
   cases: Record<string, { count: number; next_release: string | null }>;
   today: { received?: number; requests?: number; ai_read?: number; sent: number };
   unknown_domains: { domain: string; count: number; last_at: string; last_subject: string }[];
@@ -69,6 +72,9 @@ interface MailCase {
   reason: string | null;
   release_at: string | null;
   investigation_id: string | null;
+  client_id?: string | null;
+  template_id?: string | null;
+  assignee_id?: string | null;
   reference?: string | null;
   client_name?: string | null;
   subject?: string;
@@ -185,10 +191,17 @@ const FIELD_LABELS: [keyof Fields, string, boolean?][] = [
   ["notes", "ملاحظات للمستعلم", true],
 ];
 
-function CaseEditor({ item, onChanged }: { item: MailCase; onChanged: () => void }) {
+interface Choices {
+  forms: { template_id: string; title: string; client_id: string }[];
+  people: { user_id: string; full_name: string; governorate: string | null }[];
+}
+
+function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Choices; onChanged: () => void }) {
   const [fields, setFields] = useState<Fields>(item.fields);
   const [kind, setKind] = useState<Kind | "">(item.kind ?? "");
   const [fast, setFast] = useState(item.fast);
+  const [templateId, setTemplateId] = useState(item.template_id ?? "");
+  const [assigneeId, setAssigneeId] = useState(item.assignee_id ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -197,13 +210,21 @@ function CaseEditor({ item, onChanged }: { item: MailCase; onChanged: () => void
     setFields(item.fields);
     setKind(item.kind ?? "");
     setFast(item.fast);
-  }, [item]);
+    setTemplateId(item.template_id ?? "");
+    setAssigneeId(item.assignee_id ?? "");
+    // Approving one person reloads the email: what is being typed on the others must stay.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.case_id, item.status]);
+  const forms = choices.forms.filter((form) => form.client_id === item.client_id);
+  const people = [...choices.people].sort(
+    (a, b) => Number(b.governorate === fields.governorate) - Number(a.governorate === fields.governorate),
+  );
 
   async function save(): Promise<boolean> {
     try {
       await api(`/investigations/intake/cases/${item.case_id}`, {
         method: "PATCH",
-        body: JSON.stringify({ fields, kind: kind || null, fast }),
+        body: JSON.stringify({ fields, kind: kind || null, fast, template_id: templateId || null, assignee_id: assigneeId || null }),
       });
       return true;
     } catch (err) {
@@ -297,6 +318,29 @@ function CaseEditor({ item, onChanged }: { item: MailCase; onChanged: () => void
             ))}
           </select>
         </label>
+        <label className="field">
+          <span>النموذج</span>
+          <select disabled={!editable} value={templateId} onChange={(event) => setTemplateId(event.target.value)}>
+            <option value="">حسب النوع</option>
+            {forms.map((form) => (
+              <option key={form.template_id} value={form.template_id}>
+                {form.title}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>يُرسل إلى</span>
+          <select disabled={!editable} value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
+            <option value="">تلقائي (مستعلمو المنطقة)</option>
+            {people.map((person) => (
+              <option key={person.user_id} value={person.user_id}>
+                {person.full_name}
+                {person.governorate ? ` · ${person.governorate}` : ""}
+              </option>
+            ))}
+          </select>
+        </label>
         <label className="check-row">
           <input type="checkbox" disabled={!editable} checked={fast} onChange={(event) => setFast(event.target.checked)} />
           استعلام سريع
@@ -308,7 +352,7 @@ function CaseEditor({ item, onChanged }: { item: MailCase; onChanged: () => void
         <div className="drawer-actions">
           <button className="btn btn-primary" disabled={busy} onClick={() => void approve(false)}>
             <Icon name="check" size={16} />
-            اعتماد (حسب موعد الوصول)
+            اعتماد (حسب المواعيد)
           </button>
           <button className="btn" disabled={busy} onClick={() => void approve(true)}>
             إرسال الآن
@@ -332,8 +376,17 @@ function MessageDrawer({ messageId, onClose, onChanged }: { messageId: string; o
       .catch(() => setError("تعذّر تحميل البريد."));
   }, [messageId]);
   useEffect(load, [load]);
+  const [choices, setChoices] = useState<Choices>({ forms: [], people: [] });
+  useEffect(() => {
+    api<{ templates: Choices["forms"] }>("/investigations/intake/profiles")
+      .then((result) => setChoices((current) => ({ ...current, forms: result.templates })))
+      .catch(() => setError("تعذّر تحميل النماذج."));
+    api<{ investigators: (Choices["people"][number] & { status: string })[] }>("/investigations/dispatch/overview")
+      .then((result) => setChoices((current) => ({ ...current, people: result.investigators.filter((person) => person.status === "active") })))
+      .catch(() => setError("تعذّر تحميل المستعلمين."));
+  }, []);
 
-  async function act(path: "reprocess" | "ignore") {
+  async function act(path: "reprocess" | "ignore" | "cases") {
     setBusy(true);
     setError("");
     try {
@@ -397,18 +450,24 @@ function MessageDrawer({ messageId, onClose, onChanged }: { messageId: string; o
                 </div>
               </section>
               <section className="mail-cases">
-                <h3>الأشخاص في هذا البريد ({number(data?.cases.length ?? 0)})</h3>
+                <div className="mail-cases-head">
+                  <h3>الأشخاص في هذا البريد ({number(data?.cases.length ?? 0)})</h3>
+                  <button className="btn small" disabled={busy} onClick={() => void act("cases")}>
+                    <Icon name="plus" size={14} /> إضافة شخص يدويًا
+                  </button>
+                </div>
                 {data?.cases.map((item) => (
                   <CaseEditor
                     key={item.case_id}
                     item={item}
+                    choices={choices}
                     onChanged={() => {
                       load();
                       onChanged();
                     }}
                   />
                 ))}
-                {!data?.cases.length && <Empty>لم يُستخرج أي شخص من هذا البريد.</Empty>}
+                {!data?.cases.length && <Empty>لم يُستخرج أي شخص من هذا البريد. أضفه يدويًا.</Empty>}
               </section>
             </>
           )}
@@ -430,6 +489,7 @@ interface Profile {
   normal_level: string;
   fast_level: string;
   auto_send: boolean;
+  two_visits?: boolean;
   ignore_words: string[];
   notes: string | null;
   active: boolean;
@@ -460,7 +520,8 @@ function ProfileForm({
     ignore_words: (initial.ignore_words ?? []).join("، "),
     normal_level: initial.normal_level ?? "normal",
     fast_level: initial.fast_level ?? "urgent",
-    auto_send: initial.auto_send ?? true,
+    auto_send: initial.auto_send ?? false,
+    two_visits: initial.two_visits ?? false,
     active: initial.active ?? true,
   });
   const [busy, setBusy] = useState(false);
@@ -488,7 +549,22 @@ function ProfileForm({
       <div className="form-row">
         <label className="field">
           <span>الجهة</span>
-          <select value={form.client_id} onChange={(event) => setForm({ ...form, client_id: event.target.value, templates: {} })}>
+          <select
+            value={form.client_id}
+            onChange={(event) => {
+              const id = event.target.value;
+              const saved = data.profiles.find((profile) => profile.client_id === id);
+              // Linking a new domain to a client that is already set up adds to it.
+              setForm({
+                ...form,
+                client_id: id,
+                domains: [...new Set([...(saved?.domains ?? []), ...(initial.client_name ? [] : (initial.domains ?? []))])].join(", "),
+                templates: saved?.templates ?? {},
+                auto_send: saved?.auto_send ?? form.auto_send,
+                two_visits: saved?.two_visits ?? form.two_visits,
+              });
+            }}
+          >
             {data.clients.map((client) => (
               <option key={client.client_id} value={client.client_id}>
                 {client.name}
@@ -558,6 +634,10 @@ function ProfileForm({
         إرسال تلقائي للمستعلمين عندما تكون القراءة مؤكدة (وإلا ينتظر كل طلب المراجعة)
       </label>
       <label className="check-row">
+        <input type="checkbox" checked={form.two_visits} onChange={(event) => setForm({ ...form, two_visits: event.target.checked })} />
+        «سكن وعمل» زيارتان بتقريرين وسعرين وأجرين، وتُرسلان تلقائيًا
+      </label>
+      <label className="check-row">
         <input type="checkbox" checked={form.active} onChange={(event) => setForm({ ...form, active: event.target.checked })} />
         استقبال بريد هذه الجهة
       </label>
@@ -599,8 +679,17 @@ function ProfilesPanel({ unknown, onChanged }: { unknown: Overview["unknown_doma
           </button>
         )}
       </div>
+      <IntakeSetup
+        kinds={KIND_LABELS}
+        onDone={() => {
+          load();
+          onChanged();
+        }}
+      />
       {editing && (
         <ProfileForm
+          // Choosing another client to edit starts from that client's own settings.
+          key={`${editing.client_id}:${(editing.domains ?? []).join(",")}`}
           data={data}
           initial={editing}
           onCancel={() => setEditing(null)}
@@ -623,7 +712,7 @@ function ProfilesPanel({ unknown, onChanged }: { unknown: Overview["unknown_doma
               <button
                 className="btn small"
                 onClick={() => {
-                  const existing = data.profiles.find((p) => p.domains.includes(row.domain));
+                  const existing = data.profiles.find((p) => p.domains.some((d) => row.domain === d || row.domain.endsWith(`.${d}`)));
                   setEditing(existing ?? { client_id: data.clients[0]?.client_id ?? "", domains: [row.domain] });
                 }}
               >
@@ -680,6 +769,7 @@ export function InboxPage() {
   const [cases, setCases] = useState<MailCase[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageFilter, setMessageFilter] = useState("");
+  const [attention, setAttention] = useState<Message[]>([]);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState("");
 
@@ -692,6 +782,12 @@ export function InboxPage() {
         .then((data) => setMessages(data.messages))
         .catch(() => setError("تعذّر تحميل الرسائل."));
     } else if (tab !== "settings") {
+      if (tab === "review") {
+        // Emails that need a person and have no one extracted from them yet.
+        api<{ messages: Message[] }>("/investigations/intake/messages?status=attention")
+          .then((data) => setAttention(data.messages))
+          .catch(() => setError("تعذّر تحميل الرسائل."));
+      }
       const status = tab === "review" ? "review,failed" : tab === "ready" ? "ready,sending" : "sent";
       api<{ cases: MailCase[] }>(`/investigations/intake/cases?status=${status}`)
         .then((data) => setCases(data.cases))
@@ -708,11 +804,11 @@ export function InboxPage() {
   const count = (status: string) => overview?.cases[status]?.count ?? 0;
   const tabs: { key: Tab; label: string; badge?: number }[] = useMemo(
     () => [
-      { key: "review", label: "تحتاج مراجعة", badge: count("review") + count("failed") },
+      { key: "review", label: "تحتاج مراجعة", badge: count("review") + count("failed") + (overview?.attention ?? 0) },
       { key: "ready", label: "مجدولة", badge: count("ready") },
       { key: "sent", label: "أُرسلت" },
       { key: "messages", label: "كل الرسائل" },
-      { key: "settings", label: "جهات البريد", badge: overview?.unknown_domains.length },
+      { key: "settings", label: "الربط والفحص", badge: overview?.unknown_domains.length },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [overview],
@@ -735,6 +831,9 @@ export function InboxPage() {
         </button>
       </div>
       <ErrorMessage message={error} />
+      {overview?.intake_off && (
+        <p className="mail-reason">الاستقبال التلقائي متوقف على الخادم: احذف MAIL_INTAKE=off ثم أعد النشر.</p>
+      )}
 
       {overview && (
         <div className="inbox-status">
@@ -758,7 +857,7 @@ export function InboxPage() {
         {[
           { label: "وصل اليوم", value: number(overview?.today.received ?? 0), hint: `${number(overview?.today.requests ?? 0)} طلب استعلام` },
           { label: "أُرسل للمستعلمين اليوم", value: number(overview?.today.sent ?? 0), hint: "من البريد" },
-          { label: "تحتاج مراجعة", value: number(count("review") + count("failed")), hint: `${number(count("failed"))} فشل إرسالها` },
+          { label: "تحتاج مراجعة", value: number(count("review") + count("failed") + (overview?.attention ?? 0)), hint: `${number(count("failed"))} فشل إرسالها` },
           {
             label: "مجدولة",
             value: number(count("ready")),
@@ -787,7 +886,12 @@ export function InboxPage() {
         ))}
       </div>
 
-      {tab === "settings" && overview && <ProfilesPanel unknown={overview.unknown_domains} onChanged={load} />}
+      {tab === "settings" && overview && (
+        <>
+          <IntakeCheck />
+          <ProfilesPanel unknown={overview.unknown_domains} onChanged={load} />
+        </>
+      )}
 
       {tab === "messages" && (
         <section className="glass panel">
@@ -833,6 +937,41 @@ export function InboxPage() {
             </table>
           </div>
           {!messages.length && <Empty>لا توجد رسائل.</Empty>}
+        </section>
+      )}
+
+      {tab === "review" && attention.length > 0 && (
+        <section className="glass panel attention-mail">
+          <div className="panel-heading">
+            <div>
+              <p className="eyebrow">تحتاج شخصًا</p>
+              <h2>رسائل لم يُستخرج منها أحد</h2>
+            </div>
+          </div>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>وصل</th>
+                  <th>الجهة</th>
+                  <th>الموضوع</th>
+                  <th>السبب</th>
+                </tr>
+              </thead>
+              <tbody>
+                {attention.map((row) => (
+                  <tr key={row.message_id} className="clickable" onClick={() => setOpen(row.message_id)}>
+                    <td>{when(row.received_at)}</td>
+                    <td>{row.client_name ?? <span dir="ltr">{row.from_address}</span>}</td>
+                    <td dir="auto">{row.subject.slice(0, 80)}</td>
+                    <td>
+                      <small className="row-reason">{row.reason}</small>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
 

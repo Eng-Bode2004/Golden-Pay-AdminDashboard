@@ -82,7 +82,7 @@ export function ReportEmail({ investigationId }: { investigationId: string }) {
     setError("");
     setDone("");
     try {
-      await api(`/investigations/${investigationId}/email`, {
+      const result = await api<{ saved_to_sent?: boolean }>(`/investigations/${investigationId}/email`, {
         method: "POST",
         body: JSON.stringify({
           inbox,
@@ -95,7 +95,9 @@ export function ReportEmail({ investigationId }: { investigationId: string }) {
           file_name: data?.draft.subject.replace(/^RE:\s*/i, "").slice(0, 120),
         }),
       });
-      setDone(`أُرسل إلى ${to.length + cc.length} عنوان.`);
+      setDone(
+        `أُرسل إلى ${to.length + cc.length} عنوان.${result.saved_to_sent ? " وحُفظت نسخة في المرسل." : " لم تُحفظ نسخة في مجلد المرسل."}`,
+      );
       setOpen(false);
       await load();
     } catch (err) {
