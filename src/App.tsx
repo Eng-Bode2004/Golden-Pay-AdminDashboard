@@ -5,6 +5,8 @@ import { Emblem } from "./components/ui";
 import { AdministratorsPage } from "./pages/Administrators";
 import { AuditPage } from "./pages/Audit";
 import { DispatchPage } from "./pages/Dispatch";
+import { InboxPage } from "./pages/Inbox";
+import { FollowUpPage } from "./pages/FollowUp";
 import { FormsPage } from "./pages/Forms";
 import { InvestigationsPage } from "./pages/Investigations";
 import { InvitePage } from "./pages/Invite";
@@ -48,6 +50,8 @@ export function App() {
         <Route path="requests" element={<Navigate to="/" replace />} />
         <Route path="investigations" element={<InvestigationsPage />} />
         <Route path="dispatch" element={<DispatchPage />} />
+        <Route path="inbox" element={<InboxPage />} />
+        <Route path="follow-up" element={<FollowUpPage />} />
         <Route
           path="investigations/new"
           element={

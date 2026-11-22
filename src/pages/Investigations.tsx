@@ -6,6 +6,7 @@ import { SecureImage } from "../components/ReviewDrawer";
 import { between, EVENT_LABEL, minutesLabel, OFFER_RESPONSE, Stamp } from "../components/Timing";
 import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
+import { ReportEmail } from "../components/ReportEmail";
 
 // The map library loads only when a case with a location trail is opened.
 const TrailMap = lazy(() => import("../components/TrailMap"));
@@ -398,6 +399,7 @@ function CaseDrawer({
                   ) : null}
                 </section>
               )}
+              {item.status === "approved" && item.pdf_status === "ready" && <ReportEmail investigationId={item.investigation_id} />}
               {item.submitted_at && item.pdf_status !== "generating" && (
                 <section className="report-edit">
                   <div>

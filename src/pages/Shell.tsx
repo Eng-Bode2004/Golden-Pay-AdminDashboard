@@ -22,6 +22,8 @@ export function Shell() {
   const links: NavItem[] = [
     { to: "/", label: "نظرة عامة", icon: "home" },
     { to: "/investigations", label: "الاستعلامات", icon: "file" },
+    { to: "/inbox", label: "البريد الوارد", icon: "mail" },
+    { to: "/follow-up", label: "المتابعة", icon: "clock" },
     { to: "/dispatch", label: "التوزيع والعدالة", icon: "activity" },
     { to: "/performance", label: "الأداء", icon: "chart" },
     { to: "/forms", label: "النماذج", icon: "grid" },

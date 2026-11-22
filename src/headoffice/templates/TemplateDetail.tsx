@@ -134,6 +134,18 @@ export function TemplateDetailPage() {
       const data = await api<{ version: { version_id: string } }>(`/forms/admin/versions/${versionId}/clone`, { method: "POST", body: "{}" });
       navigate(`/templates/versions/${data.version.version_id}`);
     });
+  // A new form that starts as this one, e.g. a client's «تشطيب وحدة» form from its «سكن» form.
+  const copyToNew = (versionId: string, currentTitle: string) => {
+    const title = window.prompt("اسم النموذج الجديد (يبدأ نسخة مطابقة من هذا الإصدار، ثم عدّل سطر العنوان واعتمده)", `${currentTitle} - نسخة`);
+    if (!title?.trim()) return;
+    return run(async () => {
+      const data = await api<{ version: { version_id: string } }>(`/forms/admin/versions/${versionId}/copy-to-new`, {
+        method: "POST",
+        body: JSON.stringify({ title: title.trim() }),
+      });
+      navigate(`/templates/versions/${data.version.version_id}`);
+    });
+  };
 
   const template = detail?.template;
   const active = detail?.versions.find((version) => version.status === "active");
@@ -240,6 +252,11 @@ export function TemplateDetailPage() {
                     {["active", "retired", "approved"].includes(version.status) && (
                       <button className="btn small ghost" disabled={busy} onClick={() => void clone(version.version_id)}>
                         نسخة للتعديل
+                      </button>
+                    )}
+                    {["active", "retired", "approved"].includes(version.status) && (
+                      <button className="btn small ghost" disabled={busy} onClick={() => void copyToNew(version.version_id, template?.title ?? "")}>
+                        نسخ كنموذج جديد
                       </button>
                     )}
                   </div>
