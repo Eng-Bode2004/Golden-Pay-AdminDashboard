@@ -234,7 +234,7 @@ export default function NewInvestigationPage() {
               </label>
               <label className="field">
                 <span>
-                  رقم الهاتف <small>(اختياري)</small>
+                  رقم الهاتف <small>(اختياري، لا يظهر للمستعلم)</small>
                 </span>
                 <input
                   dir="ltr"

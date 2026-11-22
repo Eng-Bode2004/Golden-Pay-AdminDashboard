@@ -176,7 +176,7 @@ function Attachment({ messageId, file }: { messageId: string; file: { index: num
 const FIELD_LABELS: [keyof Fields, string, boolean?][] = [
   ["subject_name", "الاسم"],
   ["national_id", "الرقم القومي"],
-  ["phone", "الموبايل"],
+  ["phone", "الموبايل (لا يظهر للمستعلم)"],
   ["address", "عنوان الزيارة"],
   ["governorate", "المحافظة"],
   ["district", "المركز / الحي"],

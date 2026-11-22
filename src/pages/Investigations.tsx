@@ -153,6 +153,7 @@ interface Detail extends Row {
   images: { image_id: string; field_key: string }[];
   review_note: string | null;
   landmark: string | null;
+  subject_phone: string | null;
   submit_lat: number | null;
   submit_lng: number | null;
   submitted_at: string | null;
@@ -353,6 +354,12 @@ function CaseDrawer({
                 )}
                 {item.review_note && <small className="case-note">ملاحظة المراجع: {item.review_note}</small>}
                 <dl className="case-money">
+                  <div>
+                    <dt>
+                      رقم الهاتف <small>(لا يظهر للمستعلم)</small>
+                    </dt>
+                    <dd dir="ltr">{item.subject_phone || "—"}</dd>
+                  </div>
                   <div>
                     <dt>النوع</dt>
                     <dd>{item.service_name ?? "—"}</dd>
