@@ -76,9 +76,20 @@ async function send(
 ): Promise<Response> {
   const response = await fetchWithRetry(`${API}${path}`, { ...init, headers });
   if (response.status !== 401 || init.auth === false) return response;
-  if (!(await tryRefresh())) return response;
+  const outcome = await tryRefresh();
+  if (outcome === "ended") return response;
+  // The server could not answer the refresh. That is an outage, not a sign-out.
+  if (outcome === "unavailable") return unavailable();
   headers.set("Authorization", `Bearer ${getAccessToken()}`);
   return fetchWithRetry(`${API}${path}`, { ...init, headers });
+}
+
+function unavailable(): Response {
+  const error = { code: "SERVICE_UNAVAILABLE", message: "تعذّر الاتصال بالخادم الآن. حاول مرة أخرى بعد قليل." };
+  return new Response(JSON.stringify({ success: false, error }), {
+    status: 503,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 /** Authenticated image download; document images are never public URLs. */
@@ -135,8 +146,10 @@ export async function api<T>(
   return (body?.data ?? body) as T;
 }
 
-let refreshInFlight: Promise<boolean> | null = null;
-function tryRefresh(): Promise<boolean> {
+type RefreshOutcome = "renewed" | "ended" | "unavailable";
+
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
+function tryRefresh(): Promise<RefreshOutcome> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = performRefresh().finally(() => {
     refreshInFlight = null;
@@ -144,9 +157,9 @@ function tryRefresh(): Promise<boolean> {
   return refreshInFlight;
 }
 
-async function performRefresh(): Promise<boolean> {
+async function performRefresh(): Promise<RefreshOutcome> {
   const refresh = localStorage.getItem(REFRESH_KEY);
-  if (!refresh) return false;
+  if (!refresh) return "ended";
   try {
     const response = await fetch(`${API}/auth/refresh`, {
       method: "POST",
@@ -157,15 +170,21 @@ async function performRefresh(): Promise<boolean> {
       success?: boolean;
       data?: { access_token?: string; refresh_token?: string };
     } | null;
-    if (!response.ok || !body?.data?.access_token) {
-      // Only a refusal ends the session. A server that is restarting (5xx) keeps it, so a
-      // short outage never signs anyone out.
-      if ([400, 401, 403].includes(response.status)) clearSession();
-      return false;
+    // Another tab signed in or out while this request was on its way: its session stands.
+    const stored = localStorage.getItem(REFRESH_KEY);
+    if (stored !== refresh) return stored ? "renewed" : "ended";
+    if (response.ok && body?.data?.access_token) {
+      setSession(body.data.access_token, body.data.refresh_token ?? refresh);
+      return "renewed";
     }
-    setSession(body.data.access_token, body.data.refresh_token ?? refresh);
-    return true;
+    // Only our API's own refusal ends the session. A restart, a rate limit or an error page
+    // from the host never signs anyone out.
+    if ([401, 403].includes(response.status) && body?.success === false) {
+      clearSession();
+      return "ended";
+    }
+    return "unavailable";
   } catch {
-    return false;
+    return "unavailable";
   }
 }

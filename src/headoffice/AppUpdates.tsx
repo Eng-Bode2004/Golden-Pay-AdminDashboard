@@ -24,7 +24,9 @@ function versionFromName(name: string): { name: string; code: string } | null {
 }
 
 /** Uploads with progress; fetch cannot report upload progress. */
-function upload(form: FormData, onProgress: (share: number) => void): Promise<{ version_code: number; version_name: string } | null> {
+async function upload(form: FormData, onProgress: (share: number) => void): Promise<{ version_code: number; version_name: string } | null> {
+  // XMLHttpRequest cannot renew an access token, so renew it first.
+  await api("/users/me");
   return new Promise((resolve, reject) => {
     const request = new XMLHttpRequest();
     request.open("POST", `${API}/headoffice/app-releases`);

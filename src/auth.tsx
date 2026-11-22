@@ -85,27 +85,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-    // A backend that is restarting does not sign anyone out: keep trying for about a minute,
+    // A backend that is restarting does not sign anyone out: keep trying until it answers,
     // and end the session only when the server says it is no longer valid.
     let cancelled = false;
-    const attempt = async (tries: number): Promise<void> => {
+    const attempt = async (): Promise<void> => {
       try {
         await refreshMe();
       } catch (error) {
         const status = error instanceof ApiRequestError ? error.error.status : 0;
-        if ([400, 401, 403].includes(status)) {
+        const code = error instanceof ApiRequestError ? error.error.code : "";
+        // REQUEST_FAILED means the answer was not from our API (an error page from the host).
+        if ([401, 403].includes(status) && code !== "REQUEST_FAILED") {
           clearSession();
           setUser(null);
           return;
         }
-        if (tries < 12 && !cancelled) {
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          if (!cancelled) return attempt(tries + 1);
-        }
-        setUser(null);
+        if (cancelled) return;
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        if (!cancelled) return attempt();
       }
     };
-    void attempt(0).finally(() => !cancelled && setLoading(false));
+    void attempt().finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
