@@ -14,6 +14,28 @@ interface AdminRow {
   enrolled: boolean;
   mfa_method?: "email" | "totp" | "both";
 }
+interface InviteResult {
+  invite_url: string;
+  email_sent: boolean;
+}
+
+/**
+ * This dashboard serves /invite itself, so the link shown uses this site's address even when
+ * the server's DASHBOARD_PUBLIC_URL is not set.
+ */
+function linkHere(url: string): string {
+  const at = url.lastIndexOf("/invite/");
+  return at < 0 ? url : `${window.location.origin}${url.slice(at)}`;
+}
+
+/** What happened to the email, as the server reports it. */
+function inviteMessage(result: InviteResult, wantedEmail: boolean): string {
+  if (result.email_sent) return "تم إرسال الدعوة بنجاح إلى البريد الإلكتروني.";
+  return wantedEmail
+    ? "تم إنشاء الدعوة لكن تعذّر إرسال البريد. شارك الرابط بطريقة آمنة وتحقق من إعدادات SMTP في الخدمة."
+    : "أُنشئ الرابط دون إرسال بريد. انسخه وأرسله بنفسك.";
+}
+
 interface InviteRow {
   invitation_id: string;
   email: string;
@@ -57,28 +79,20 @@ export function AdministratorsPage() {
     );
   async function invite(event: React.FormEvent) {
     event.preventDefault();
+    const pressed = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const wantedEmail = pressed?.value !== "link";
     setBusy("invite");
     setError("");
     setMessage("");
     setInviteUrl("");
     try {
-      const result = await api<{
-        invite_url: string;
-        email_sent: boolean;
-        from: string;
-      }>("/admin/administrators/invitations", {
+      const result = await api<InviteResult & { from: string }>("/admin/administrators/invitations", {
         method: "POST",
-        body: JSON.stringify({
-          email,
-        }),
+        body: JSON.stringify({ email, send_email: wantedEmail }),
       });
-      setInviteUrl(result.invite_url);
+      setInviteUrl(linkHere(result.invite_url));
       setFrom(result.from);
-      setMessage(
-        result.email_sent
-          ? "تم إرسال الدعوة بنجاح إلى البريد الإلكتروني."
-          : "تم إنشاء الدعوة لكن تعذّر إرسال البريد. شارك الرابط بطريقة آمنة وتحقق من إعدادات SMTP في الخدمة.",
-      );
+      setMessage(inviteMessage(result, wantedEmail));
       setEmail("");
       await load();
     } catch (err) {
@@ -120,23 +134,29 @@ export function AdministratorsPage() {
   }
   async function inviteAction(
     invitation: InviteRow,
-    type: "resend" | "revoke",
+    type: "resend" | "link" | "revoke",
   ) {
     if (type === "revoke" && !window.confirm("هل تريد إلغاء هذه الدعوة؟"))
       return;
     setBusy(invitation.invitation_id);
     setError("");
+    setMessage("");
+    // Whichever action runs, a link already on screen stops working.
+    setInviteUrl("");
     try {
-      await api(
-        `/admin/administrators/invitations/${invitation.invitation_id}${type === "resend" ? "/resend" : ""}`,
-        { method: type === "resend" ? "POST" : "DELETE" },
-      );
+      const path = `/admin/administrators/invitations/${invitation.invitation_id}`;
+      if (type === "revoke") {
+        await api(path, { method: "DELETE" });
+        setMessage("تم إلغاء الدعوة.");
+      } else {
+        const result = await api<InviteResult>(`${path}/resend`, {
+          method: "POST",
+          body: JSON.stringify({ send_email: type === "resend" }),
+        });
+        setInviteUrl(linkHere(result.invite_url));
+        setMessage(inviteMessage(result, type === "resend"));
+      }
       await load();
-      setMessage(
-        type === "resend"
-          ? "تمت إعادة معالجة إرسال الدعوة. تحقق من البريد أو إعدادات SMTP."
-          : "تم إلغاء الدعوة.",
-      );
     } catch (err) {
       setError(
         err instanceof ApiRequestError ? err.message : "تعذّر تنفيذ الإجراء.",
@@ -285,6 +305,9 @@ export function AdministratorsPage() {
             <Icon name="mail" size={17} />
             {busy === "invite" ? "جارٍ الإرسال…" : "إرسال الدعوة"}
           </button>
+          <button className="btn ghost btn-block" name="delivery" value="link" disabled={!!busy} style={{ marginTop: 8 }}>
+            إنشاء رابط دون إرسال بريد
+          </button>
           {from && (
             <p className="hint" style={{ fontSize: 10, marginTop: 17 }}>
               بريد الإرسال: <bdi>{from}</bdi>
@@ -298,7 +321,10 @@ export function AdministratorsPage() {
           <p className="hint">
             تعامل معه كبيانات حساسة ولا تشاركه إلا مع المدير المقصود.
           </p>
-          <p className="secret">{inviteUrl}</p>
+          <p className="hint">هذا أحدث رابط، وأي رابط سابق لهذه الدعوة لم يعد يعمل.</p>
+          <p className="secret" dir="ltr" style={{ overflowWrap: "anywhere" }}>
+            {inviteUrl}
+          </p>
           <button
             className="btn small"
             onClick={() =>
@@ -364,6 +390,13 @@ export function AdministratorsPage() {
                             onClick={() => void inviteAction(item, "resend")}
                           >
                             إعادة إرسال
+                          </button>
+                          <button
+                            className="btn ghost small"
+                            disabled={!!busy}
+                            onClick={() => void inviteAction(item, "link")}
+                          >
+                            رابط جديد
                           </button>
                           <button
                             className="btn ghost btn-danger small"

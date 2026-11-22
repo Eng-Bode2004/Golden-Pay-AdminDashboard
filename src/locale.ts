@@ -3,6 +3,10 @@ import { initAppearance } from "./themes";
 const english: Record<string, string> = {
   // Head Office templates and versioned client forms
   "تراجعها الإدارة العليا": "Reviewed by head office",
+  "إنشاء رابط دون إرسال بريد": "Create a link without emailing",
+  "أُنشئ الرابط دون إرسال بريد. انسخه وأرسله بنفسك.": "Link created and no email sent. Copy it and share it yourself.",
+  "هذا أحدث رابط، وأي رابط سابق لهذه الدعوة لم يعد يعمل.": "This is the newest link; any earlier link for this invitation no longer works.",
+  "رابط جديد": "New link",
   "البنوك والشركات": "Banks and companies",
   "عرض الكل": "Show all",
   "اختر الجهات التي تراجعها. يُحفظ اختيارك لحسابك على هذا المتصفح، والرقم هو التقارير التي تنتظر المراجعة.": "Choose the clients you review. Your choice is saved for your account in this browser; the number is reports waiting for review.",
