@@ -7,6 +7,8 @@ import { between, EVENT_LABEL, minutesLabel, OFFER_RESPONSE, Stamp } from "../co
 import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
 import { ReportEmail } from "../components/ReportEmail";
+import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
+import { useAuth } from "../auth";
 
 // The map library loads only when a case with a location trail is opened.
 const TrailMap = lazy(() => import("../components/TrailMap"));
@@ -775,6 +777,10 @@ export function InvestigationsPage() {
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const { user } = useAuth();
+  const [chosenClients, setChosenClients] = useSavedClients(user?.user_id ?? "");
+  const [clients, setClients] = useState<FilterClient[]>([]);
+  const clientKey = chosenClients.join(",");
   const [busy, setBusy] = useState(true);
   const [error, setError] = useState("");
   const [open, setOpen] = useState<string | null>(() => params.get("case"));
@@ -786,11 +792,13 @@ export function InvestigationsPage() {
     const query = new URLSearchParams();
     if (status) query.set("status", status);
     if (search.trim()) query.set("search", search.trim());
-    api<{ investigations: Row[]; counts: Record<string, number> }>(`/investigations?${query}`)
+    if (clientKey) query.set("clients", clientKey);
+    api<{ investigations: Row[]; counts: Record<string, number>; clients?: FilterClient[] }>(`/investigations?${query}`)
       .then((data) => {
         if (!active) return;
         setRows(data.investigations);
         setCounts(data.counts);
+        setClients(data.clients ?? []);
         setError("");
       })
       .catch(() => {
@@ -802,7 +810,7 @@ export function InvestigationsPage() {
     return () => {
       active = false;
     };
-  }, [status, search, reload]);
+  }, [status, search, clientKey, reload]);
 
   const total = Object.values(counts).reduce((sum, value) => sum + value, 0);
 
@@ -829,6 +837,7 @@ export function InvestigationsPage() {
           تم إرسال الاستعلام <bdi className="mono">{sent}</bdi> بنجاح.
         </div>
       )}
+      {clients.length > 0 && <ClientFilter clients={clients} value={chosenClients} onChange={setChosenClients} />}
       <div className="requests-toolbar">
         <div className="segmented status-tabs">
           {TABS.map((tab) => (
@@ -926,7 +935,9 @@ export function InvestigationsPage() {
             </tbody>
           </table>
         </div>
-        {!busy && !rows.length && <Empty>لا توجد استعلامات هنا بعد.</Empty>}
+        {!busy && !rows.length && (
+          <Empty>{clientKey ? "لا توجد استعلامات هنا للجهات التي اخترتها." : "لا توجد استعلامات هنا بعد."}</Empty>
+        )}
       </section>
       {open && (
         <CaseDrawer id={open} onClose={() => setOpen(null)} onChanged={() => setReload((value) => value + 1)} />

@@ -3,6 +3,10 @@ import { initAppearance } from "./themes";
 const english: Record<string, string> = {
   // Head Office templates and versioned client forms
   "تراجعها الإدارة العليا": "Reviewed by head office",
+  "البنوك والشركات": "Banks and companies",
+  "عرض الكل": "Show all",
+  "اختر الجهات التي تراجعها. يُحفظ اختيارك لحسابك على هذا المتصفح، والرقم هو التقارير التي تنتظر المراجعة.": "Choose the clients you review. Your choice is saved for your account in this browser; the number is reports waiting for review.",
+  "لا توجد استعلامات هنا للجهات التي اخترتها.": "No investigations here for the clients you chose.",
   "(اختياري، لا يظهر للمستعلم)": "(optional, hidden from the investigator)",
   "(لا يظهر للمستعلم)": "(hidden from the investigator)",
   "الموبايل (لا يظهر للمستعلم)": "Mobile (hidden from the investigator)",
