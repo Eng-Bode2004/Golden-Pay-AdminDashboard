@@ -7,6 +7,7 @@ import { between, EVENT_LABEL, minutesLabel, OFFER_RESPONSE, Stamp } from "../co
 import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
 import { ReportEmail } from "../components/ReportEmail";
+import { DeleteInvestigationDrawer } from "../components/DeleteInvestigationDrawer";
 import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
 import { useAuth } from "../auth";
 
@@ -218,6 +219,7 @@ function CaseDrawer({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [returning, setReturning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   // Manual assignment / reassignment: who, and why (kept on the case and in the audit log).
   const [assigning, setAssigning] = useState(false);
   const [people, setPeople] = useState<{ user_id: string; full_name: string; status: string; score: number; active: number; governorate: string | null }[]>([]);
@@ -672,6 +674,14 @@ function CaseDrawer({
                   </ol>
                 </section>
               )}
+              <section className="danger-zone">
+                <h3>حذف نهائي</h3>
+                <p className="hint">يحذف الاستعلام وكل ما يخصه من النظام: الصور والتقرير والسجل والمستحقات. لا يمكن التراجع.</p>
+                <button className="btn ghost btn-danger" disabled={busy} onClick={() => setDeleting(true)}>
+                  <Icon name="close" size={16} />
+                  حذف الاستعلام نهائيًا
+                </button>
+              </section>
             </>
           )}
         </div>
@@ -760,6 +770,17 @@ function CaseDrawer({
           </footer>
         )}
       </aside>
+      {deleting && item && (
+        <DeleteInvestigationDrawer
+          item={item}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => {
+            setDeleting(false);
+            onChanged();
+            onClose();
+          }}
+        />
+      )}
       {zoomed && (
         <button className="image-zoom" aria-label="إغلاق" onClick={() => setZoomed(null)}>
           <img src={zoomed} alt="" />
