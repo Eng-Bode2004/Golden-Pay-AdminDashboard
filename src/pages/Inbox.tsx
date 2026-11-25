@@ -3,6 +3,8 @@ import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import { api, apiBlob, ApiRequestError } from "../api";
 import { IntakeCheck, IntakeSetup } from "../components/IntakeSetup";
+import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
+import { useAuth } from "../auth";
 import { Empty, ErrorMessage, Icon, number } from "../components/ui";
 import "../intake.css";
 
@@ -42,6 +44,7 @@ interface Overview {
   cases: Record<string, { count: number; next_release: string | null }>;
   today: { received?: number; requests?: number; ai_read?: number; sent: number };
   unknown_domains: { domain: string; count: number; last_at: string; last_subject: string }[];
+  clients?: FilterClient[];
   rule: string;
 }
 
@@ -849,28 +852,34 @@ export function InboxPage() {
   const [attention, setAttention] = useState<Message[]>([]);
   const [open, setOpen] = useState<string | null>(null);
   const [error, setError] = useState("");
+  // The same companies and banks the administrator chose on the investigations page.
+  const { user } = useAuth();
+  const [chosenClients, setChosenClients] = useSavedClients(user?.user_id ?? "");
+  const clientKey = chosenClients.join(",");
 
   const load = useCallback(() => {
-    api<Overview>("/investigations/intake/overview")
+    const only = clientKey ? `clients=${encodeURIComponent(clientKey)}` : "";
+    const withClients = (path: string) => (only ? `${path}${path.includes("?") ? "&" : "?"}${only}` : path);
+    api<Overview>(withClients("/investigations/intake/overview"))
       .then(setOverview)
       .catch(() => setError("تعذّر تحميل حالة البريد."));
     if (tab === "messages") {
-      api<{ messages: Message[] }>(`/investigations/intake/messages${messageFilter ? `?status=${messageFilter}` : ""}`)
+      api<{ messages: Message[] }>(withClients(`/investigations/intake/messages${messageFilter ? `?status=${messageFilter}` : ""}`))
         .then((data) => setMessages(data.messages))
         .catch(() => setError("تعذّر تحميل الرسائل."));
     } else if (tab !== "settings") {
       if (tab === "review") {
         // Emails that need a person and have no one extracted from them yet.
-        api<{ messages: Message[] }>("/investigations/intake/messages?status=attention")
+        api<{ messages: Message[] }>(withClients("/investigations/intake/messages?status=attention"))
           .then((data) => setAttention(data.messages))
           .catch(() => setError("تعذّر تحميل الرسائل."));
       }
       const status = tab === "review" ? "review,failed" : tab === "ready" ? "ready,sending" : "sent";
-      api<{ cases: MailCase[] }>(`/investigations/intake/cases?status=${status}`)
+      api<{ cases: MailCase[] }>(withClients(`/investigations/intake/cases?status=${status}`))
         .then((data) => setCases(data.cases))
         .catch(() => setError("تعذّر تحميل الطلبات."));
     }
-  }, [tab, messageFilter]);
+  }, [tab, messageFilter, clientKey]);
   useEffect(load, [load]);
   // The inbox is read every minute: keep the page current while it is open.
   useEffect(() => {
@@ -928,6 +937,10 @@ export function InboxPage() {
             <small>{overview.ai.configured ? "مفعّلة" : "غير مفعّلة: الصور والملفات الممسوحة تنتظر المراجعة"}</small>
           </span>
         </div>
+      )}
+
+      {overview?.clients && overview.clients.length > 0 && tab !== "settings" && (
+        <ClientFilter clients={overview.clients} value={chosenClients} onChange={setChosenClients} />
       )}
 
       <div className="metrics-grid">
