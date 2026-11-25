@@ -282,6 +282,24 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
     }
   }
 
+  // The same person, the other visit: the email asked for work and home but was read as one.
+  const otherVisit: Kind | null = item.kind === "work" ? "home" : item.kind === "home" ? "work" : null;
+  async function addVisit(next: Kind) {
+    setBusy(true);
+    setError("");
+    try {
+      // What was typed on this case goes into the copy too.
+      if (editable && !(await save())) return;
+      await api(`/investigations/intake/cases/${item.case_id}/visit`, { method: "POST", body: JSON.stringify({ kind: next }) });
+      setNote(`أُضيفت زيارة «${KIND_LABELS[next]}» أسفل هذه الحالة: راجع عنوانها واعتمدها.`);
+      onChanged();
+    } catch (err) {
+      setError(err instanceof ApiRequestError ? err.message : "تعذّر إضافة الزيارة.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function reject() {
     const reason = window.prompt("سبب الرفض (اختياري)") ?? undefined;
     if (reason === undefined) return;
@@ -406,6 +424,18 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
           </button>
           <button className="btn ghost btn-danger" disabled={busy} onClick={() => void reject()}>
             رفض
+          </button>
+          {otherVisit && (
+            <button className="btn ghost" disabled={busy} onClick={() => void addVisit(otherVisit)}>
+              <Icon name="plus" size={14} /> إضافة زيارة {KIND_LABELS[otherVisit]}
+            </button>
+          )}
+        </div>
+      )}
+      {!editable && item.status !== "rejected" && otherVisit && (
+        <div className="drawer-actions">
+          <button className="btn ghost" disabled={busy} onClick={() => void addVisit(otherVisit)}>
+            <Icon name="plus" size={14} /> إضافة زيارة {KIND_LABELS[otherVisit]}
           </button>
         </div>
       )}
