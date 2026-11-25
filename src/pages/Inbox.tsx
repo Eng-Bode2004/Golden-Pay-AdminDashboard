@@ -11,7 +11,7 @@ const KIND_LABELS: Record<Kind, string> = {
   home: "سكن",
   work: "عمل",
   home_work: "سكن وعمل",
-  business: "ميداني / منشأة",
+  business: "ميداني / منشأة / تجار",
   finishing: "تشطيب وحدة",
 };
 const INBOX_LABELS: Record<string, string> = { retail: "Retail", info: "Info", sme: "SME" };
@@ -59,6 +59,16 @@ interface Fields {
   notes: string | null;
 }
 
+type Knowledge = "with" | "without";
+const KNOWLEDGE_LABELS: Record<Knowledge, string> = { with: "بعلم العميل", without: "بدون علم العميل" };
+
+/** A stored time as the value of a datetime-local input (the admin's own clock, Cairo). */
+function localInput(value: string | null | undefined): string {
+  if (!value) return "";
+  const at = new Date(value);
+  return new Date(at.getTime() - at.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
+}
+
 interface MailCase {
   case_id: string;
   message_id: string;
@@ -75,6 +85,8 @@ interface MailCase {
   client_id?: string | null;
   template_id?: string | null;
   assignee_id?: string | null;
+  knowledge?: Knowledge | null;
+  appointment_at?: string | null;
   reference?: string | null;
   client_name?: string | null;
   subject?: string;
@@ -202,6 +214,8 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
   const [fast, setFast] = useState(item.fast);
   const [templateId, setTemplateId] = useState(item.template_id ?? "");
   const [assigneeId, setAssigneeId] = useState(item.assignee_id ?? "");
+  const [knowledge, setKnowledge] = useState<Knowledge | "">(item.knowledge ?? "");
+  const [appointment, setAppointment] = useState(localInput(item.appointment_at));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [note, setNote] = useState("");
@@ -212,6 +226,8 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
     setFast(item.fast);
     setTemplateId(item.template_id ?? "");
     setAssigneeId(item.assignee_id ?? "");
+    setKnowledge(item.knowledge ?? "");
+    setAppointment(localInput(item.appointment_at));
     // Approving one person reloads the email: what is being typed on the others must stay.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item.case_id, item.status]);
@@ -224,7 +240,15 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
     try {
       await api(`/investigations/intake/cases/${item.case_id}`, {
         method: "PATCH",
-        body: JSON.stringify({ fields, kind: kind || null, fast, template_id: templateId || null, assignee_id: assigneeId || null }),
+        body: JSON.stringify({
+          fields,
+          kind: kind || null,
+          fast,
+          template_id: templateId || null,
+          assignee_id: assigneeId || null,
+          knowledge: knowledge || null,
+          appointment_at: knowledge === "with" && appointment ? new Date(appointment).toISOString() : null,
+        }),
       });
       return true;
     } catch (err) {
@@ -341,11 +365,34 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
             ))}
           </select>
         </label>
+        <label className="field">
+          <span>علم العميل</span>
+          <select disabled={!editable} value={knowledge} onChange={(event) => setKnowledge(event.target.value as Knowledge | "")}>
+            <option value="">غير مذكور</option>
+            <option value="without">{KNOWLEDGE_LABELS.without}</option>
+            <option value="with">{KNOWLEDGE_LABELS.with}</option>
+          </select>
+        </label>
+        {knowledge === "with" && (
+          <label className="field">
+            <span>موعد الزيارة (بعد الاتصال بالعميل)</span>
+            <input
+              type="datetime-local"
+              dir="ltr"
+              disabled={!editable}
+              value={appointment}
+              onChange={(event) => setAppointment(event.target.value)}
+            />
+          </label>
+        )}
         <label className="check-row">
           <input type="checkbox" disabled={!editable} checked={fast} onChange={(event) => setFast(event.target.checked)} />
           استعلام سريع
         </label>
       </div>
+      {knowledge === "with" && editable && !appointment && (
+        <p className="hint">اتصل بالعميل على رقمه أعلاه واتفق على موعد، ثم اكتبه هنا واعتمد الحالة.</p>
+      )}
       <ErrorMessage message={error} />
       {note && <p className="hint ok-text">{note}</p>}
       {editable && (
@@ -996,6 +1043,9 @@ export function InboxPage() {
                     <td>
                       {row.fields.subject_name ?? "—"}
                       {row.fast && <span className="badge badge-danger fast-badge">سريع</span>}
+                      {row.knowledge === "with" && (
+                        <span className="badge fast-badge">{row.appointment_at ? `موعد ${when(row.appointment_at)}` : "يحتاج موعد"}</span>
+                      )}
                     </td>
                     <td>{[row.fields.governorate, row.fields.district].filter(Boolean).join(" - ") || "—"}</td>
                     <td>{row.kind ? KIND_LABELS[row.kind] : "—"}</td>
