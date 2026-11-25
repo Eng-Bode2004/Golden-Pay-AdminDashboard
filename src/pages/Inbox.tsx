@@ -8,14 +8,25 @@ import { useAuth } from "../auth";
 import { Empty, ErrorMessage, Icon, number } from "../components/ui";
 import "../intake.css";
 
-type Kind = "home" | "work" | "home_work" | "business" | "finishing";
-const KIND_LABELS: Record<Kind, string> = {
+// The same types as the backend (intake/rules.ts KIND_LABELS): one form slot each.
+const KIND_LABELS = {
   home: "سكن",
   work: "عمل",
   home_work: "سكن وعمل",
-  business: "ميداني / منشأة / تجار",
   finishing: "تشطيب وحدة",
-};
+  business_owner: "صاحب نشاط / أصحاب الأعمال",
+  sme: "شركات صغيرة ومتوسطة",
+  company: "شركات",
+  supplier: "موردين ووكلاء",
+  site_visit: "زيارة ميدانية / مفاجئة",
+  clinic: "عيادات وصيدليات",
+  dealer_coding: "تكويد معرض",
+  merchant_coding: "تكويد تاجر / تجار",
+  company_coding: "تكويد شركات وكيانات",
+  follow_up: "متابعة",
+  business: "ميداني (غير محدد)",
+} as const;
+type Kind = keyof typeof KIND_LABELS;
 const INBOX_LABELS: Record<string, string> = { retail: "Retail", info: "Info", sme: "SME" };
 const MESSAGE_STATUS: Record<string, string> = {
   new: "جديد",
@@ -570,6 +581,7 @@ interface Profile {
   fast_level: string;
   auto_send: boolean;
   two_visits?: boolean;
+  inbox_kinds?: Record<string, Kind>;
   ignore_words: string[];
   notes: string | null;
   active: boolean;
@@ -602,6 +614,7 @@ function ProfileForm({
     fast_level: initial.fast_level ?? "urgent",
     auto_send: initial.auto_send ?? false,
     two_visits: initial.two_visits ?? false,
+    inbox_kinds: initial.inbox_kinds ?? {},
     active: initial.active ?? true,
   });
   const [busy, setBusy] = useState(false);
@@ -640,6 +653,7 @@ function ProfileForm({
                 client_id: id,
                 domains: [...new Set([...(saved?.domains ?? []), ...(initial.client_name ? [] : (initial.domains ?? []))])].join(", "),
                 templates: saved?.templates ?? {},
+                inbox_kinds: saved?.inbox_kinds ?? {},
                 auto_send: saved?.auto_send ?? form.auto_send,
                 two_visits: saved?.two_visits ?? form.two_visits,
               });
@@ -678,6 +692,32 @@ function ProfileForm({
           ))}
         </div>
         {!forms.length && <small className="field-hint">لا توجد نماذج معتمدة لهذه الجهة بعد.</small>}
+      </div>
+      <div className="field">
+        <span>النوع عندما لا يذكر البريد نوعًا، حسب الصندوق الذي وصل إليه</span>
+        <div className="kind-templates">
+          {Object.keys(INBOX_LABELS).map((inbox) => (
+            <label key={inbox} className="field">
+              <span>{INBOX_LABELS[inbox]}</span>
+              <select
+                value={form.inbox_kinds[inbox] ?? ""}
+                onChange={(event) => {
+                  const next = { ...form.inbox_kinds };
+                  if (event.target.value) next[inbox] = event.target.value as Kind;
+                  else delete next[inbox];
+                  setForm({ ...form, inbox_kinds: next });
+                }}
+              >
+                <option value="">— ينتظر المراجعة —</option>
+                {(Object.keys(KIND_LABELS) as Kind[]).map((kind) => (
+                  <option key={kind} value={kind}>
+                    {KIND_LABELS[kind]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ))}
+        </div>
       </div>
       <div className="form-row three">
         <label className="field">
