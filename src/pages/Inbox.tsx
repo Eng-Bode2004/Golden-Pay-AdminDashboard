@@ -6,6 +6,7 @@ import { IntakeCheck, IntakeSetup } from "../components/IntakeSetup";
 import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
 import { useAuth } from "../auth";
 import { Empty, ErrorMessage, Icon, number } from "../components/ui";
+import { AREA_LEVELS, LocationFields } from "../components/AreaPicker";
 import "../intake.css";
 
 // The same types as the backend (intake/rules.ts KIND_LABELS): one form slot each.
@@ -69,6 +70,9 @@ interface Fields {
   company: string | null;
   governorate: string | null;
   district: string | null;
+  local_unit?: string | null;
+  main_village?: string | null;
+  sub_village?: string | null;
   client_reference: string | null;
   notes: string | null;
 }
@@ -210,8 +214,6 @@ const FIELD_LABELS: [keyof Fields, string, boolean?][] = [
   ["national_id", "الرقم القومي"],
   ["phone", "الموبايل (لا يظهر للمستعلم)"],
   ["address", "عنوان الزيارة"],
-  ["governorate", "المحافظة"],
-  ["district", "المركز / الحي"],
   ["company", "جهة العمل"],
   ["client_reference", "مرجع العميل"],
   ["notes", "ملاحظات للمستعلم", true],
@@ -348,7 +350,36 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
       </header>
       {item.reason && <p className="mail-reason">{item.reason}</p>}
       <div className="mail-case-grid">
-        {FIELD_LABELS.map(([key, label, wide]) => (
+        {FIELD_LABELS.slice(0, 4).map(([key, label, wide]) => (
+          <label key={key} className={`field${wide ? " wide" : ""}`}>
+            <span>{label}</span>
+            {wide ? (
+              <textarea rows={3} disabled={!editable} value={fields[key] ?? ""} onChange={(event) => setFields({ ...fields, [key]: event.target.value })} />
+            ) : (
+              <input
+                disabled={!editable}
+                dir={key === "national_id" || key === "phone" ? "ltr" : "auto"}
+                value={fields[key] ?? ""}
+                onChange={(event) => setFields({ ...fields, [key]: event.target.value })}
+              />
+            )}
+          </label>
+        ))}
+        <div className="wide">
+          <LocationFields
+            disabled={!editable}
+            value={Object.fromEntries(
+              AREA_LEVELS.map((level) => [level.key, (fields[level.key as keyof Fields] as string | null | undefined) ?? ""]),
+            )}
+            onChange={(place) =>
+              setFields({ ...fields, ...Object.fromEntries(AREA_LEVELS.map((level) => [level.key, place[level.key] || null])) })
+            }
+          />
+          {editable && !fields.governorate && (
+            <small className="hint">اختر المحافظة، أو اكتب العنوان واحفظ: تُستنتج المحافظة والمركز من العنوان إن أمكن.</small>
+          )}
+        </div>
+        {FIELD_LABELS.slice(4).map(([key, label, wide]) => (
           <label key={key} className={`field${wide ? " wide" : ""}`}>
             <span>{label}</span>
             {wide ? (

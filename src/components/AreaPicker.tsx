@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { api } from "../api";
@@ -38,11 +38,15 @@ interface Place {
 export function LocationFields({
   value,
   onChange,
+  disabled = false,
 }: {
   value: AreaNames;
   onChange: (next: AreaNames) => void;
+  disabled?: boolean;
 }) {
   const [lists, setLists] = useState<Place[][]>([[], [], [], [], []]);
+  // Several pickers on one page (one per emailed person) each need their own lists.
+  const uid = useId();
 
   useEffect(() => {
     let active = true;
@@ -70,7 +74,8 @@ export function LocationFields({
         <label className="field" key={level.key}>
           <span>{level.label}</span>
           <input
-            list={`places-${level.key}`}
+            list={`places-${uid}-${level.key}`}
+            disabled={disabled}
             value={value[level.key] ?? ""}
             placeholder={lists[index].length ? "اختر أو اكتب" : "اكتب الاسم"}
             onChange={(event) => {
@@ -80,7 +85,7 @@ export function LocationFields({
               onChange(next);
             }}
           />
-          <datalist id={`places-${level.key}`}>
+          <datalist id={`places-${uid}-${level.key}`}>
             {lists[index].map((place) => (
               <option key={place.location_id} value={place.name} />
             ))}
