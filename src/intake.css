@@ -107,3 +107,5 @@
 .check-lines .warn b, .setup-list .warn b { color: #f2cf9b; }
 .check-lines .fail b, .setup-list .fail b { color: var(--danger); }
 .attention-mail { margin-bottom: 16px; }
+.source-email details summary { cursor: pointer; color: var(--gold); font-size: 13px; margin: 4px 0 8px; }
+.source-email .mail-attachments { margin: 10px 0; }

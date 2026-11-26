@@ -7,6 +7,7 @@ import { between, EVENT_LABEL, minutesLabel, OFFER_RESPONSE, Stamp } from "../co
 import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
 import { ReportEmail } from "../components/ReportEmail";
+import { Attachment } from "../components/MailAttachment";
 import { DeleteInvestigationDrawer } from "../components/DeleteInvestigationDrawer";
 import { EditInvestigationDrawer, type EditableCase } from "../components/EditInvestigationDrawer";
 import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
@@ -171,6 +172,16 @@ interface Detail extends Row {
   locations?: TrailPoint[];
   created_at: string;
   reviewed_at: string | null;
+  /** The bank's or company's email this case came from, with its documents (admins only). */
+  source_email?: {
+    message_id: string;
+    from_address: string | null;
+    from_name: string | null;
+    subject: string;
+    body_text: string | null;
+    received_at: string;
+    attachments: { index: number; name: string; type: string; bytes: number }[];
+  } | null;
   events?: { type: string; note: string | null; created_at: string; user_name: string | null; actor_name: string | null }[];
   offers?: {
     tier_label: string;
@@ -384,6 +395,35 @@ function CaseDrawer({
                   </div>
                 </dl>
               </section>
+              {item.source_email && (
+                <section className="source-email">
+                  <h3>مستندات الجهة</h3>
+                  <p className="hint">
+                    من {item.source_email.from_name || item.source_email.from_address} ·{" "}
+                    {new Date(item.source_email.received_at).toLocaleString(document.documentElement.lang === "en" ? "en-US" : "ar-EG")}
+                  </p>
+                  <p dir="auto">
+                    <b>{item.source_email.subject || "بدون عنوان"}</b>
+                  </p>
+                  {item.source_email.attachments.length ? (
+                    <div className="mail-attachments">
+                      {item.source_email.attachments.map((file) => (
+                        <Attachment key={file.index} messageId={item.source_email!.message_id} file={file} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="hint">لم ترسل الجهة مرفقات مع هذا الطلب.</p>
+                  )}
+                  {item.source_email.body_text && (
+                    <details>
+                      <summary>نص رسالة الجهة</summary>
+                      <pre className="mail-body" dir="auto">
+                        {item.source_email.body_text}
+                      </pre>
+                    </details>
+                  )}
+                </section>
+              )}
               {item.submitted_at && (
                 <section className="pdf-card">
                   <Icon name="file" size={24} />
