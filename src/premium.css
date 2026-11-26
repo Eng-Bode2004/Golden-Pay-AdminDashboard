@@ -393,6 +393,7 @@ html[lang="ar"] .review-drawer { inset-inline-end: auto; left: 12px; --from: -40
 .case-summary { display: grid; justify-items: start; gap: 5px; }
 .case-summary p { font-weight: 600; }
 .case-summary small { color: var(--muted); font-size: 12.5px; }
+.case-summary .case-edit { margin-top: 6px; min-height: 34px; padding: 0 14px; font-size: 13px; }
 .case-note { color: #f2cf9b !important; }
 .pdf-card { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-radius: 15px; border: 1px solid rgba(var(--tint-rgb), 0.32); background: rgba(var(--tint-rgb), 0.08); }
 .pdf-card > svg { color: var(--accent); }

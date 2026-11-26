@@ -8,6 +8,7 @@ import { TRAIL_LABEL, type TrailPoint } from "../components/TrailMap";
 import { date, Empty, ErrorMessage, Icon, number } from "../components/ui";
 import { ReportEmail } from "../components/ReportEmail";
 import { DeleteInvestigationDrawer } from "../components/DeleteInvestigationDrawer";
+import { EditInvestigationDrawer, type EditableCase } from "../components/EditInvestigationDrawer";
 import { ClientFilter, useSavedClients, type FilterClient } from "../components/ClientFilter";
 import { useAuth } from "../auth";
 
@@ -220,6 +221,7 @@ function CaseDrawer({
   const [busy, setBusy] = useState(false);
   const [returning, setReturning] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
   // Manual assignment / reassignment: who, and why (kept on the case and in the audit log).
   const [assigning, setAssigning] = useState(false);
   const [people, setPeople] = useState<{ user_id: string; full_name: string; status: string; score: number; active: number; governorate: string | null }[]>([]);
@@ -357,6 +359,12 @@ function CaseDrawer({
                   </small>
                 )}
                 {item.review_note && <small className="case-note">ملاحظة المراجع: {item.review_note}</small>}
+                {!["approved", "cancelled"].includes(item.status) && (
+                  <button className="btn ghost case-edit" disabled={busy} onClick={() => setEditing(true)}>
+                    <Icon name="file" size={15} />
+                    تعديل البيانات
+                  </button>
+                )}
                 <dl className="case-money">
                   <div>
                     <dt>
@@ -770,6 +778,17 @@ function CaseDrawer({
           </footer>
         )}
       </aside>
+      {editing && item && (
+        <EditInvestigationDrawer
+          item={item as EditableCase}
+          onClose={() => setEditing(false)}
+          onSaved={() => {
+            setEditing(false);
+            void load();
+            onChanged();
+          }}
+        />
+      )}
       {deleting && item && (
         <DeleteInvestigationDrawer
           item={item}
