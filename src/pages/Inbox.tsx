@@ -198,15 +198,17 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
     setAppointment(localInput(item.appointment_at));
     // Approving one person reloads the email: what is being typed on the others must stay.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.case_id, item.status]);
+  }, [item.case_id, item.status, item.kind]);
   const forms = choices.forms.filter((form) => form.client_id === item.client_id);
   const people = [...choices.people].sort(
     (a, b) => Number(b.governorate === fields.governorate) - Number(a.governorate === fields.governorate),
   );
 
+  // «سكن وعمل» without a combined form is saved as two visits: this one (home) and a work copy.
+  const SPLIT_NOTE = "قُسّم الطلب إلى زيارتين: هذه «سكن»، وأُضيفت «عمل» أسفلها بعنوانها. راجعها واعتمدها.";
   async function save(): Promise<boolean> {
     try {
-      await api(`/investigations/intake/cases/${item.case_id}`, {
+      const saved = await api<{ split_work_case_id: string | null }>(`/investigations/intake/cases/${item.case_id}`, {
         method: "PATCH",
         body: JSON.stringify({
           fields,
@@ -218,6 +220,12 @@ function CaseEditor({ item, choices, onChanged }: { item: MailCase; choices: Cho
           appointment_at: knowledge === "with" && appointment ? new Date(appointment).toISOString() : null,
         }),
       });
+      if (saved.split_work_case_id) {
+        // The home visit still has to be checked before it goes out.
+        setNote(SPLIT_NOTE);
+        onChanged();
+        return false;
+      }
       return true;
     } catch (err) {
       setError(err instanceof ApiRequestError ? err.message : "تعذّر الحفظ.");
